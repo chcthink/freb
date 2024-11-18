@@ -1,0 +1,146 @@
+@charset "utf-8";
+@import url("fonts.css");
+/* 全局 */
+body {
+    padding: 0%;
+    margin-top: 0%;
+    margin-bottom: 0%;
+    margin-left: 1%;
+    margin-right: 1%;
+    line-height: 130%;
+    text-align: justify;
+    font-family: "DK-SONGTI","st","宋体","zw",sans-serif;
+}
+
+/* 正文段落 */
+p {
+    text-align: justify;
+    text-indent: 2em;
+    duokan-text-indent: 2em;
+    line-height: 120%;
+    margin-right: 1%;
+    margin-left: 1%;
+    font-family: "975-圆体","DK-SONGTI","st","宋体","zw",sans-serif;
+}
+
+/* 内容简介 */
+h2.desc {
+	color: #204d30;
+    font-family: "方正小标宋_GBK","DK-XIAOBIAOSONG",serif;
+    font-size: 1.1em;
+	margin: 0.3em auto;
+	padding: 5px 0 4px 8px;
+	text-align: center;
+}
+p.desc-2{
+    font-family: "fs","DK-FANGSONG",仿宋,"fs","fangsong",sans-serif;
+}
+p.desc-3{
+    font-family: "fs","DK-FANGSONG",仿宋,"fs","fangsong",sans-serif;
+	text-align: right;
+}
+div.pg {
+    /* 分卷顶部图片 */
+    margin:35% auto 0 auto;
+    text-align: center;
+    text-indent: 0em;
+    duokan-text-indent: 0em;
+    /* duokan-bleed: lefttopright;*/
+}
+img.pg {
+    width: 20%;
+}
+
+/* 分卷页 */
+/*body.head {*/
+/*	!* 分卷背景图片 *!*/
+/*    background: #fff url(../Images/vol.png) no-repeat top center;*/
+/*    background-size: cover;*/
+/*}*/
+div {
+    margin: 0px;
+    padding: 0px;
+    line-height: 120%;
+    text-align: justify;
+    font-family: "方正小标宋_GBK","DK-XIAOBIAOSONG",serif;
+}
+div.logo2 {
+    /* 分卷顶部图片 */
+    margin:35% auto 0 auto;
+    text-align: center;
+    text-indent: 0em;
+    duokan-text-indent: 0em;
+    /* duokan-bleed: lefttopright;*/
+}
+img.logo2 {
+    width: 20%;
+}
+.c1{
+    /* 卷名 */
+    margin: 1% auto 0 auto;
+    width: 240px;
+    font-family: "方正小标宋_GBK","DK-XIAOBIAOSONG",serif;
+    text-align: center;
+    font-weight: normal;
+    font-size: 1.3em;
+    color: #204d30;
+    line-height:150%;
+    padding:10px 5px;
+    text-shadow: 0 1 1px #d3cfcc;
+}
+.c1 span{
+    /* 卷号 */
+    font-family: "方正小标宋_GBK","DK-XIAOBIAOSONG",serif;
+    font-size: 0.9em;
+    color: #204d30;
+}
+
+/* 正文页眉 */
+div.logo {
+    /* 页眉顶部图片 */
+    margin:0.2em auto 0.2em auto;
+    text-align: center;
+    text-indent: 0em;
+    duokan-text-indent: 0em;
+    /* duokan-bleed: lefttopright;*/
+}
+img.logo {
+    width: 30%;
+}
+h2 {
+    /* 章节名 */
+    font-size: 1.10em;
+    color: #204d30;
+    text-align: center;
+    line-height: 150%;
+    padding: 0 4px 0 4px;
+    margin: 0.2em auto 0.5em auto;
+    border-color: #CC99CC;
+    font-family: "方正小标宋_GBK","DK-XIAOBIAOSONG";
+    text-shadow: 0 1px 1px #fff;
+}
+.num {
+    /* 章节序号 */
+    background-color: #9daf89;
+    border-radius: 3px;
+    font-family: "方正小标宋_GBK","DK-XIAOBIAOSONG";
+    padding: 2px 4px 1px 4px;
+    color: #fff;
+    font-size: small;
+    text-align: center;
+}
+.num-2 {
+    /* 章节名序号 */
+    font-family: "方正小标宋_GBK","DK-XIAOBIAOSONG";
+    /*background-color: #a2847a;*/
+    /*border-radius: 3px; */
+    padding: 2px 4px 1px 4px;
+    color: #6e8455;
+    font-size: small;
+    text-align: center;
+}
+h4 {
+    /* 书籍结尾 */
+    text-align: center;
+    color: #204d30;
+}

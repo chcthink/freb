@@ -26,9 +26,9 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		return err
 	}
 	book.Name = doc.Find("div.booknav2 h1 a").Text()
-	//cover, _ := doc.Find("div.bookimg2 img").Attr("src")
+	// cover, _ := doc.Find("div.bookimg2 img").Attr("src")
 	// todo 下载文件
-	//if !strings.Contains(cover, "nc.jpg") {
+	// if !strings.Contains(cover, "nc.jpg") {
 	//	s := strings.Split(book.Cover, "/")
 	//	path := utils.DEFAULT_IMAGE_PATH + s[len(s)-1]
 	//	err := utils.DownloadFile(utils.GetDomainFromUrl(book.Url)+book.Cover, path)
@@ -36,8 +36,10 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	//		return err
 	//	}
 	//	book.Cover = path
-	//}
-	book.Author = doc.Find("div.booknav2 p a[href*='author']").Text()
+	// }
+	if book.Author != "Unknown" {
+		book.Author = doc.Find("div.booknav2 p a[href*='author']").Text()
+	}
 	book.Intro = doc.Find("div.content").Text()
 
 	// chapter

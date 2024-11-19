@@ -7,6 +7,7 @@ import (
 	"freb/models"
 	"freb/utils"
 	"github.com/go-shiori/go-epub"
+	"os"
 	"strconv"
 )
 
@@ -117,7 +118,9 @@ func (e *EpubFormat) GenContentPrefix(buf *bytes.Buffer, str string) {
 }
 
 func (e *EpubFormat) GenBookContent(index int, title, content bytes.Buffer) (err error) {
-	utils.Fmtf("%s %d/%d", title.String(), index, len(e.ChapterUrls))
+	utils.Fmtf("\r%s %d/%d", title.String(), index, len(e.ChapterUrls))
+	_ = os.Stdout.Sync()
+
 	if volNum, vol, isVol := utils.VolByDefaultReg(title.String()); isVol {
 		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.volImage, volNum, vol),
 			volNum+" "+vol, volNum+" "+vol+".xhtml", e.InnerURL.css)

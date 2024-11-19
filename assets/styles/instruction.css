@@ -261,11 +261,6 @@
 	url(../Windows/fonts/h3.ttf);					/*ADE1,8, 2.0 Windows Path*/
 }
 
-@font-face {
-	font-family:"liuyun";
-	src:local("%E6%B1%89%E4%BB%AA%E6%B5%81%E4%BA%91%E4%BD%93"),
-	     url("../Fonts/liuyun.ttf");
-}
 body {
     padding: 0;
 	margin: 0 0.5%;

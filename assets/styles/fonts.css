@@ -1,9 +1,11 @@
 @charset "utf-8";
 /*---常用---*/
 
+
+/* 默认字体 - 霞鹜文楷-GB */
 @font-face {
-    font-family: "975-圆体";
-    src: url("../fonts/975MaruSC-Medium.ttf");
+    font-family: "epub-default";
+    src: url("../fonts/font.ttf");
 }
 
 @font-face {

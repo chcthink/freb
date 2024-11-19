@@ -11,8 +11,9 @@
 
 # ------- EPub内容 HTML --------- #
 # 制作说明
-style.instruction.title = "制作说明"
-style.instruction.dom ="""
+[style]
+instruction.title = "制作说明"
+instruction.dom ="""
 <h3 class="ver">制作说明</h3>
 <p class="ver-char"><span class="verchar_01">%s</span></p>
 <p class="ver-title_01">%s&#160;◎著</p>
@@ -42,8 +43,8 @@ style.instruction.dom ="""
 """
 
 # 简介
-style.desc.title = "内容简介"
-style.desc.dom = """
+desc.title = "内容简介"
+desc.dom = """
 <div class="pg">
   <img alt="logo" class="pg" src="%s" />
 </div>
@@ -51,7 +52,7 @@ style.desc.dom = """
 <p class="desc-2">%s</p>
 """
 # 分卷
-style.vol = """
+vol = """
 <div class="logo2">
 	<img alt="logo" class="logo2" src="%s"/>
 </div>
@@ -60,7 +61,7 @@ style.vol = """
 </div>
 """
 # 章节
-sytle.chapter = """
+chapter = """
 <div class="logo"><img alt="logo" class="logo" src="%s" /></div>
 <h2><span class="num">%s</span><br /> %s<br /><span class="num-2">%s</span></h2>
 """

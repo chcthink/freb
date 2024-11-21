@@ -1,21 +1,20 @@
 package formats
 
 import (
-	"bytes"
 	"fmt"
 	"freb/config"
 	"freb/models"
 	"freb/utils"
 	"github.com/go-shiori/go-epub"
-	"os"
+	"path"
 	"strconv"
 )
 
 // 章节
 const (
-	CHAPTER_FILE_PREFIX = `chapter_`
-	HTML_P              = `<p>`
-	HTMLP_END           = `</p>`
+	chapterFilePrefix = `chapter_`
+	htmlP             = `<p>`
+	htmlPEnd          = `</p>`
 )
 
 type InnerURL struct {
@@ -44,7 +43,7 @@ func (e *EpubFormat) InitBook() (err error) {
 		utils.Err(err)
 		return
 	}
-	e.AddFont("assets/fonts/975MaruSC-Medium.ttf", "975MaruSC-Medium.ttf")
+	e.AddFont(e.Book.Font, "975MaruSC-Medium.ttf")
 	_, err = e.AddCSS("assets/styles/fonts.css", "fonts.css")
 	if err != nil {
 		utils.Err(err)
@@ -57,7 +56,8 @@ func (e *EpubFormat) InitBook() (err error) {
 	utils.Fmt("初始化书籍封面...")
 	if e.Cover != "" {
 		var image string
-		image, err = e.AddImage(e.Cover, "cover.png")
+
+		image, err = e.AddImage(e.Cover, path.Base(e.Cover))
 		if err != nil {
 			err = fmt.Errorf("添加封面失败 %w", err)
 			return
@@ -113,15 +113,15 @@ func (e *EpubFormat) InitBook() (err error) {
 	return
 }
 
-func (e *EpubFormat) GenContentPrefix(buf *bytes.Buffer, str string) {
-	buf.WriteString(HTML_P + str + HTMLP_END)
+func (e *EpubFormat) GenContentPrefix(i int, str string) {
+	e.Book.Chapters[i].Content.WriteString(htmlP + str + htmlPEnd)
 }
 
-func (e *EpubFormat) GenBookContent(index int, title, content bytes.Buffer) (err error) {
-	utils.Fmtf("\r%s %d/%d", title.String(), index, len(e.ChapterUrls))
-	_ = os.Stdout.Sync()
+func (e *EpubFormat) GenBookContent(index int) (err error) {
+	title := e.Book.Chapters[index].Title.String()
+	fmt.Printf("\r[%d/%d]\033[K%s", index+1, len(e.Chapters), title)
 
-	if volNum, vol, isVol := utils.VolByDefaultReg(title.String()); isVol {
+	if volNum, vol, isVol := utils.VolByDefaultReg(title); isVol {
 		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.volImage, volNum, vol),
 			volNum+" "+vol, volNum+" "+vol+".xhtml", e.InnerURL.css)
 		if err != nil {
@@ -131,9 +131,10 @@ func (e *EpubFormat) GenBookContent(index int, title, content bytes.Buffer) (err
 		return
 	}
 
-	num, name, subNum := utils.ChapterTitleByDefaultReg(title.String())
-	_, err = e.AddSection(fmt.Sprintf(config.Cfg.Chapter+content.String(), e.contentLogo, num, name, subNum),
-		title.String(), CHAPTER_FILE_PREFIX+strconv.Itoa(index)+".xhtml", e.InnerURL.css)
+	num, name, subNum := utils.ChapterTitleByDefaultReg(title)
+	_, err = e.AddSection(fmt.Sprintf(config.Cfg.Chapter+e.Book.Chapters[index].Content.String(),
+		e.contentLogo, num, name, subNum), num+" "+name,
+		chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.InnerURL.css)
 	if err != nil {
 		utils.Err(err)
 		return

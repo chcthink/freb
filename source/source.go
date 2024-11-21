@@ -2,6 +2,7 @@ package source
 
 import (
 	"bytes"
+	"freb/config"
 	"freb/formatter"
 	"freb/formatter/formats"
 	"freb/models"
@@ -9,8 +10,10 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Source interface {
@@ -21,23 +24,21 @@ type UrlSource struct {
 }
 
 func (u *UrlSource) GetBook(book *models.Book) (err error) {
+	start := time.Now()
 	doc, err := utils.GetDom(book.Url)
 	if err != nil {
 		return err
 	}
 	book.Name = doc.Find("div.booknav2 h1 a").Text()
-	// cover, _ := doc.Find("div.bookimg2 img").Attr("src")
-	// todo 下载文件
-	// if !strings.Contains(cover, "nc.jpg") {
-	//	s := strings.Split(book.Cover, "/")
-	//	path := utils.DEFAULT_IMAGE_PATH + s[len(s)-1]
-	//	err := utils.DownloadFile(utils.GetDomainFromUrl(book.Url)+book.Cover, path)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	book.Cover = path
-	// }
-	if book.Author != "Unknown" {
+
+	if book.Cover == "" || !utils.IsFileExist(book.Cover) {
+		book.Cover, err = utils.DownloadCover(book.Url)
+		if err != nil {
+			return err
+		}
+	}
+
+	if book.Author == "Unknown" {
 		book.Author = doc.Find("div.booknav2 p a[href*='author']").Text()
 	}
 	book.Intro = doc.Find("div.content").Text()
@@ -56,11 +57,13 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 			numStr, _ := s.Attr("data-num")
 			num, _ := strconv.Atoi(numStr)
 			total = num
-			book.ChapterUrls = make([]string, num)
+			book.Chapters = make([]models.Chapter, num)
 		}
-		book.ChapterUrls[total-i-1], _ = s.Find("a").Attr("href")
+		book.Chapters[i].Title = &bytes.Buffer{}
+		book.Chapters[i].Content = &bytes.Buffer{}
+		book.Chapters[total-i-1].Url, _ = s.Find("a").Attr("href")
 	})
-	utils.Fmtf("章节数: %d", len(book.ChapterUrls))
+	utils.Fmtf("章节数: %d", len(book.Chapters))
 	// confirm format
 	var novel formatter.Formatter
 	switch book.Format {
@@ -73,15 +76,14 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	}
 	// contents
 	utils.Fmt("正在添加章节...")
-	for i, url := range book.ChapterUrls {
-		doc, err = utils.GetDom(url)
+	for i, chapter := range book.Chapters {
+		doc, err = utils.GetDom(chapter.Url)
 		if err != nil {
 			return
 		}
+
 		node := doc.Find("div.txtnav").Contents()
-		var title bytes.Buffer
-		title.WriteString(doc.Find("div.txtnav h1").Text())
-		var buf bytes.Buffer
+		book.Chapters[i].Title.WriteString(doc.Find("div.txtnav h1").Text())
 		var f func(*html.Node)
 		f = func(n *html.Node) {
 			if n.DataAtom == atom.Div || n.DataAtom == atom.H1 {
@@ -96,9 +98,9 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 					return
 				}
 				if book.Format == "epub" {
-					novel.GenContentPrefix(&buf, raw)
+					novel.GenContentPrefix(i, raw)
 				} else {
-					buf.WriteString(raw)
+					book.Chapters[i].Content.WriteString(raw)
 				}
 			}
 			if n.FirstChild != nil {
@@ -110,7 +112,8 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		for _, n := range node.Nodes {
 			f(n)
 		}
-		err = novel.GenBookContent(i+1, title, buf)
+
+		err = novel.GenBookContent(i)
 		if err != nil {
 			return
 		}
@@ -119,6 +122,9 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	if err != nil {
 		return
 	}
-	utils.Success("已生成书籍")
+
+	os.RemoveAll(config.Cfg.TmpDir)
+	totalTime := time.Since(start).String()
+	utils.Successf("\n已生成书籍,使用时长: %s", totalTime)
 	return
 }

@@ -19,6 +19,7 @@ type Style struct {
 
 type Config struct {
 	Style
+	TmpDir string `toml:"-"`
 }
 
 var Cfg Config

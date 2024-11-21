@@ -1,12 +1,8 @@
 package formatter
 
-import (
-	"bytes"
-)
-
 type Formatter interface {
 	InitBook() error
-	GenContentPrefix(*bytes.Buffer, string)
-	GenBookContent(int, bytes.Buffer, bytes.Buffer) error
+	GenContentPrefix(int, string)
+	GenBookContent(int) error
 	Build() error
 }

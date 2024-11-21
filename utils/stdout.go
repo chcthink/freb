@@ -5,7 +5,10 @@ import (
 	"github.com/fatih/color"
 )
 
-const ERR_URL = "url 输入错误"
+const (
+	ErrUrl  = "url 输入错误"
+	newLine = "\n"
+)
 
 var outB = color.New(color.Bold)
 
@@ -15,12 +18,16 @@ func Err(err error) {
 }
 
 func UrlErr() {
-	Err(errors.New(ERR_URL))
+	Err(errors.New(ErrUrl))
 }
 
 func Success(str string) {
 	outB.Add(color.FgGreen)
 	_, _ = outB.Println(str)
+}
+func Successf(str string, a ...interface{}) {
+	outB.Add(color.FgGreen)
+	_, _ = outB.Printf(str+newLine, a...)
 }
 
 func Fmt(str string) {
@@ -30,5 +37,5 @@ func Fmt(str string) {
 
 func Fmtf(str string, a ...interface{}) {
 	outB.Add(color.FgWhite)
-	_, _ = outB.Printf(str+"\n", a...)
+	_, _ = outB.Printf(str+newLine, a...)
 }

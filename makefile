@@ -1,2 +1,2 @@
 git :
-	git add . && git cz && git push
+	git add . && git cz && git push origin

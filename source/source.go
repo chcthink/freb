@@ -16,10 +16,6 @@ import (
 	"time"
 )
 
-type Source interface {
-	GetBook(*models.Book) error
-}
-
 type UrlSource struct {
 }
 
@@ -123,8 +119,8 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		return
 	}
 
-	os.RemoveAll(config.Cfg.TmpDir)
-	totalTime := time.Since(start).String()
+	_ = os.RemoveAll(config.Cfg.TmpDir)
+	totalTime := time.Since(start).Truncate(time.Second).String()
 	utils.Successf("\n已生成书籍,使用时长: %s", totalTime)
 	return
 }

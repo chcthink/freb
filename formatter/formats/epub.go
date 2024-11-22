@@ -36,12 +36,15 @@ func (e *EpubFormat) InitBook() (err error) {
 		utils.Err(err)
 		return
 	}
-
+	e.SetLang("zh-Hans")
 	// 添加 css
 	e.InnerURL.css, err = e.AddCSS("assets/styles/main.css", "main.css")
 	if err != nil {
 		utils.Err(err)
 		return
+	}
+	if e.Book.Font == "" {
+		e.Book.Font = "assets/fonts/font.ttf"
 	}
 	e.AddFont(e.Book.Font, "font.ttf")
 	_, err = e.AddCSS("assets/styles/fonts.css", "fonts.css")
@@ -120,7 +123,9 @@ func (e *EpubFormat) GenContentPrefix(i int, str string) {
 func (e *EpubFormat) GenBookContent(index int) (err error) {
 	title := e.Book.Chapters[index].Title.String()
 	fmt.Printf("\r[%d/%d]\033[K%s", index+1, len(e.Chapters), title)
-
+	if index+1 == len(e.Chapters) {
+		fmt.Println()
+	}
 	if volNum, vol, isVol := utils.VolByDefaultReg(title); isVol {
 		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.volImage, volNum, vol),
 			volNum+" "+vol, volNum+" "+vol+".xhtml", e.InnerURL.css)

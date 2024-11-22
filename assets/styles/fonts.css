@@ -2,10 +2,10 @@
 /*---常用---*/
 
 
-/* 默认字体 - 霞鹜文楷-GB */
+/* 默认字体 - 975MaruSC-Medium */
 @font-face {
     font-family: "epub-default";
-    src: url("../fonts/font.ttf");
+    src: url("../fonts/font.ttf") format(truetype);
 }
 
 @font-face {

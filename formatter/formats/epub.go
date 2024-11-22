@@ -43,7 +43,7 @@ func (e *EpubFormat) InitBook() (err error) {
 		utils.Err(err)
 		return
 	}
-	e.AddFont(e.Book.Font, "975MaruSC-Medium.ttf")
+	e.AddFont(e.Book.Font, "font.ttf")
 	_, err = e.AddCSS("assets/styles/fonts.css", "fonts.css")
 	if err != nil {
 		utils.Err(err)

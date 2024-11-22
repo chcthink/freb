@@ -19,7 +19,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&Novel.Out, "out", "o", "", "输出文件名")
 	rootCmd.PersistentFlags().StringVarP(&Novel.SubCover, "sub", "s", "", "每章封面")
 	rootCmd.PersistentFlags().StringVarP(&Novel.Author, "author", "a", "Unknown", "作者")
-	rootCmd.PersistentFlags().StringVarP(&Novel.Author, "font", "w", "assets/fonts/975MaruSC-Medium.ttf", "作者")
+	rootCmd.PersistentFlags().StringVarP(&Novel.Author, "font", "w", "assets/fonts/font.ttf", "作者")
 	rootCmd.PersistentFlags().BoolVarP(&isDownload, " is_download", "d", true, "书籍来源:下载-true")
 }
 

@@ -53,8 +53,8 @@ desc.dom = """
 """
 # 分卷
 vol = """
-<div class="logo2">
-	<img alt="logo" class="logo2" src="%s"/>
+<div class="vol-logo">
+	<img alt="logo" class="vol-logo" src="%s"/>
 </div>
 <div class="c1">
 	<span>%s</span><br/>%s

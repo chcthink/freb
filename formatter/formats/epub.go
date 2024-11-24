@@ -52,6 +52,11 @@ func (e *EpubFormat) InitBook() (err error) {
 		utils.Err(err)
 		return
 	}
+	err = e.AddMetaINF("assets/META-INF/com.apple.ibooks.display-options.xml")
+	if err != nil {
+		utils.Err(err)
+		return
+	}
 	// 添加标题
 	utils.Fmtf("初始化书籍标题:%s", e.Name)
 	e.SetTitle(e.Book.Name)

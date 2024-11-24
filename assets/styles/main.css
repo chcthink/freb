@@ -64,7 +64,7 @@ div {
     text-align: justify;
     font-family: "方正小标宋_GBK","DK-XIAOBIAOSONG",serif;
 }
-div.logo2 {
+div.vol-logo {
     /* 分卷顶部图片 */
     margin:35% auto 0 auto;
     text-align: center;
@@ -72,7 +72,7 @@ div.logo2 {
     duokan-text-indent: 0em;
     /* duokan-bleed: lefttopright;*/
 }
-img.logo2 {
+img.vol-logo {
     width: 20%;
 }
 .c1{

@@ -1,6 +1,8 @@
 module freb
 
-go 1.23
+go 1.23.1
+
+toolchain go1.23.3
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.0
@@ -14,8 +16,8 @@ require (
 
 require (
 	github.com/andybalholm/cascadia v1.3.2 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
-	github.com/gofrs/uuid/v5 v5.0.0 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
+	github.com/gofrs/uuid/v5 v5.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -23,3 +25,5 @@ require (
 	github.com/vincent-petithory/dataurl v1.0.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 )
+
+replace github.com/go-shiori/go-epub => github.com/chcthink/go-epub v0.0.0-20241123173524-2d667e18dd61

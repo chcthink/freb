@@ -2,7 +2,7 @@
 /*---常用---*/
 
 
-/* 默认字体 - 975MaruSC-Medium */
+/* 默认字体 - 975MaruSC-regular */
 @font-face {
     font-family: "epub-default";
     src: url("../fonts/font.ttf") format(truetype);

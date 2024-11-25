@@ -2,6 +2,7 @@ package source
 
 import (
 	"bytes"
+	"fmt"
 	"freb/config"
 	"freb/formatter"
 	"freb/formatter/formats"
@@ -21,18 +22,11 @@ type UrlSource struct {
 
 func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	start := time.Now()
-	doc, err := utils.GetDom(book.Url)
+	doc, err := utils.GetDom(fmt.Sprintf(utils.TocUrl(), book.Id))
 	if err != nil {
 		return err
 	}
 	book.Name = doc.Find("div.booknav2 h1 a").Text()
-
-	if book.Cover == "" || !utils.IsFileExist(book.Cover) {
-		book.Cover, err = utils.DownloadCover(book.Url)
-		if err != nil {
-			return err
-		}
-	}
 
 	if book.Author == "Unknown" {
 		book.Author = doc.Find("div.booknav2 p a[href*='author']").Text()

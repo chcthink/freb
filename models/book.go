@@ -3,18 +3,22 @@ package models
 import "bytes"
 
 // Book 图书
-// Name 书名 Cover 封面 Chapters 章节
-// Author 作者 SubCover 章封面
+// Name 书名 Author 作者
+// Cover 封面 SubCover 章封面 Vol 卷图
+// Chapters 章节
 type Book struct {
 	Name     string
-	Url      string
+	Id       string
 	Cover    string
 	SubCover string
+	Vol      string
 	Author   string
 	Intro    string
 	Format   string
 	Out      string
-	Font     string
+	Lang     string
+	Desc     bool
+	// Font     string
 	Chapters []Chapter
 }
 

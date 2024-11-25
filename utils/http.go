@@ -8,20 +8,22 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io"
-	"math"
 	"net/http"
 	"os"
-	"strconv"
+	"path/filepath"
+	"strings"
 )
 
 // req
-const userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15"
+const (
+	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15"
+	domain    = "https://69shuba.cx"
+	tocPage   = "https://69shuba.cx/book/%s.htm"
+)
 
-func NewReq(url string) (req *http.Request) {
+func NewGet(url string) (req *http.Request) {
 	req, _ = http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("User-Agent", userAgent)
-	// can't confirm this cookie is work in connecting check
-	// req.AddCookie(&http.Cookie{Name: "shuba", Value: "11072-13848-21591-4277"})
 	return
 }
 
@@ -30,7 +32,7 @@ func GetDom(url string) (doc *goquery.Document, err error) {
 	if !CheckUrl(url) {
 		return nil, errors.New(ErrUrl)
 	}
-	req := NewReq(url)
+	req := NewGet(url)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -43,42 +45,46 @@ func GetDom(url string) (doc *goquery.Document, err error) {
 	return doc, nil
 }
 
-func DownloadCover(url string) (path string, err error) {
+func DownloadTmp(filename string, handler func() *http.Request) (path string, err error) {
+	if handler != nil {
+		req := handler()
+		paths := strings.Split(req.URL.Path, "/")
+		name := paths[len(paths)-1]
+		var resp *http.Response
+		resp, err = http.DefaultClient.Do(req)
+		if err != nil {
+			err = fmt.Errorf("下载封面错误:%w", err)
+			return
+		}
+		defer resp.Body.Close()
 
-	// 创建 HTTP 请求
-	domain := GetDomainFromUrl(url)
-	bookId := BookId(url)
-	bookIdStr := strconv.Itoa(bookId)
-	mid := strconv.FormatFloat(math.Floor(float64(bookId)/1000.0), 'f', 0, 64)
-	url = domain + "/fengmian/" + mid + "/" + bookIdStr + "/" + bookIdStr + "s.jpg"
-	req := NewReq(url)
-	req.Header.Set("Referer", "https://69shuba.cx/modules/article/search.php")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		err = fmt.Errorf("下载封面错误:%w", err)
-		return
-	}
-	defer resp.Body.Close()
+		// 检查 HTTP 响应状态码
+		if resp.StatusCode != http.StatusOK {
+			err = fmt.Errorf("无法请求地址: %s", resp.Status)
+			return
+		}
+		// 创建文件
+		path = filepath.Join(config.Cfg.TmpDir, filename+filepath.Ext(name))
+		var out *os.File
+		out, err = os.Create(path)
+		if err != nil {
+			return
+		}
+		defer out.Close()
 
-	// 检查 HTTP 响应状态码
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println(url)
-		err = fmt.Errorf("无法请求封面地址: %s", resp.Status)
-		return
+		// 将响应体写入文件
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			return
+		}
 	}
-	// 创建文件
-	path = config.Cfg.TmpDir + "/cover.jpg"
-	out, err := os.Create(path)
-	if err != nil {
-		return
-	}
-	defer out.Close()
-
-	// 将响应体写入文件
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return
-	}
-
 	return
+}
+
+func Domain() string {
+	return domain
+}
+
+func TocUrl() string {
+	return tocPage
 }

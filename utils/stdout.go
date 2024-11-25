@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"github.com/fatih/color"
 )
 
@@ -17,14 +16,11 @@ func Err(err error) {
 	_, _ = outB.Println(err.Error())
 }
 
-func UrlErr() {
-	Err(errors.New(ErrUrl))
+func Errf(str string, a ...interface{}) {
+	outB.Add(color.FgRed)
+	_, _ = outB.Printf(str+newLine, a...)
 }
 
-func Success(str string) {
-	outB.Add(color.FgGreen)
-	_, _ = outB.Println(str)
-}
 func Successf(str string, a ...interface{}) {
 	outB.Add(color.FgGreen)
 	_, _ = outB.Printf(str+newLine, a...)
@@ -37,5 +33,10 @@ func Fmt(str string) {
 
 func Fmtf(str string, a ...interface{}) {
 	outB.Add(color.FgWhite)
+	_, _ = outB.Printf(str+newLine, a...)
+}
+
+func Warnf(str string, a ...interface{}) {
+	outB.Add(color.FgYellow)
 	_, _ = outB.Printf(str+newLine, a...)
 }

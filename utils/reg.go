@@ -2,7 +2,6 @@ package utils
 
 import (
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -69,15 +68,10 @@ func IsTitle(str string) bool {
 }
 
 const (
-	bookIdReg = "[0-9]+.htm"
+	numReg = "[0-9]+.htm"
 )
 
-func BookId(url string) int {
-	reg := regexp.MustCompilePOSIX(bookIdReg)
-	suffix := reg.FindString(url)
-	if strings.Contains(suffix, ".htm") {
-		ret, _ := strconv.Atoi(strings.Split(suffix, ".")[0])
-		return ret
-	}
-	return 0
+func NumReg(str string) bool {
+	reg := regexp.MustCompilePOSIX(numReg)
+	return reg.MatchString(str)
 }

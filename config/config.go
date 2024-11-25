@@ -17,8 +17,15 @@ type Style struct {
 	Chapter     string
 }
 
+type Selector struct {
+	Title  string
+	Author string
+	Intro  string
+}
+
 type Config struct {
-	Style
+	*Style
+	*Selector
 	TmpDir string `toml:"-"`
 }
 

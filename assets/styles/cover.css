@@ -1,0 +1,13 @@
+body {
+    background-color: #FFFFFF;
+    margin: 0;
+    display: flex; /* 启用 Flexbox 布局 */
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+    height: 100vh; /* 让 body 高度充满视口 */
+    text-align: center; /* 确保文本也居中 */
+}
+img {
+    max-height: 100%;
+    max-width: 100%;
+}

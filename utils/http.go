@@ -3,7 +3,6 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"freb/config"
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -45,7 +44,7 @@ func GetDom(url string) (doc *goquery.Document, err error) {
 	return doc, nil
 }
 
-func DownloadTmp(filename string, handler func() *http.Request) (path string, err error) {
+func DownloadTmp(dir, filename string, handler func() *http.Request) (path string, err error) {
 	if handler != nil {
 		req := handler()
 		paths := strings.Split(req.URL.Path, "/")
@@ -64,7 +63,7 @@ func DownloadTmp(filename string, handler func() *http.Request) (path string, er
 			return
 		}
 		// 创建文件
-		path = filepath.Join(config.Cfg.TmpDir, filename+filepath.Ext(name))
+		path = filepath.Join(dir, filename+filepath.Ext(name))
 		var out *os.File
 		out, err = os.Create(path)
 		if err != nil {

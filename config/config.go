@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"freb/utils"
 	"github.com/pelletier/go-toml"
 )
 
@@ -37,7 +38,7 @@ const (
 )
 
 func GetConfig() error {
-	file, err := toml.LoadFile(cfgPath)
+	file, err := toml.LoadFile(utils.LocalOrDownload(cfgPath))
 	if err != nil {
 		return fmt.Errorf(cfgErr, err)
 	}

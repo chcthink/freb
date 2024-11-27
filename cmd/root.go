@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"freb/config"
 	"freb/models"
 	"freb/source"
 	"freb/utils"
@@ -126,7 +127,7 @@ func setImage(from, filename string, ifDefaultReq bool, handler func() *http.Req
 			return
 		}
 		if ifDefaultReq {
-			source, err = utils.DownloadTmp(filename, handler)
+			source, err = utils.DownloadTmp(config.Cfg.TmpDir, filename, handler)
 			if err != nil {
 				utils.Warnf(textUrlErr, err.Error())
 			}
@@ -134,7 +135,7 @@ func setImage(from, filename string, ifDefaultReq bool, handler func() *http.Req
 		return
 	}
 	if utils.CheckUrl(from) {
-		source, err = utils.DownloadTmp("cover", func() *http.Request {
+		source, err = utils.DownloadTmp(config.Cfg.TmpDir, "cover", func() *http.Request {
 			return utils.NewGet(novel.Cover)
 		})
 		if err != nil {

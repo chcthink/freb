@@ -89,7 +89,7 @@ func TocUrl() string {
 }
 
 const (
-	githubRaw = "https://gh.idayer.com/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/"
+	githubRaw = "https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/"
 )
 
 func LocalOrDownload(path string) string {

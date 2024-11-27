@@ -52,11 +52,10 @@ func DownloadTmp(dir, filename string, handler func() *http.Request) (path strin
 		var resp *http.Response
 		resp, err = http.DefaultClient.Do(req)
 		if err != nil {
-			err = fmt.Errorf("下载封面错误:%w", err)
+			err = fmt.Errorf("下载错误:%w", err)
 			return
 		}
 		defer resp.Body.Close()
-
 		// 检查 HTTP 响应状态码
 		if resp.StatusCode != http.StatusOK {
 			err = fmt.Errorf("无法请求地址: %s", resp.Status)
@@ -92,9 +91,20 @@ const (
 	githubRaw = "https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/"
 )
 
-func LocalOrDownload(path string) string {
+func LocalOrUrl(path string) string {
 	if !IsFileExist(path) {
 		return githubRaw + path
 	}
 	return path
+}
+
+func LocalOrDownload(path, tmpDir string) (source string, err error) {
+	if !IsFileExist(path) {
+		source, err = DownloadTmp(tmpDir, path, func() *http.Request {
+			return NewGet(githubRaw + path)
+		})
+		return
+	}
+
+	return path, err
 }

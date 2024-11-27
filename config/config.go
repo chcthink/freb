@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"freb/utils"
 	"github.com/pelletier/go-toml"
+	"os"
 )
 
 type Page struct {
@@ -38,7 +39,12 @@ const (
 )
 
 func GetConfig() error {
-	file, err := toml.LoadFile(utils.LocalOrDownload(cfgPath))
+	tmp := os.TempDir()
+	source, err := utils.LocalOrDownload(cfgPath, tmp)
+	if err != nil {
+		return fmt.Errorf(cfgErr, err)
+	}
+	file, err := toml.LoadFile(source)
 	if err != nil {
 		return fmt.Errorf(cfgErr, err)
 	}

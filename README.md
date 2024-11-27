@@ -1,6 +1,6 @@
 
 #### 介绍
-用于下载小说并以 EPub 格式存储
+用于下载小说并以 EPub 格式存储,支持Apple books(ibooks)自定义字体
 
 #### How to use
 1. 在 [github release界面](https://github.com/chcthink/freb/releases)下载对应系统的可执行文件

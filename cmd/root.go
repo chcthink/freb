@@ -93,7 +93,7 @@ func BookParamCheck() (err error) {
 		return fmt.Errorf(flagErr, idCmd)
 	}
 	// cover subCover vol
-	novel.Cover = setImage(novel.Cover, "cover", true, func() *http.Request {
+	novel.Cover, err = setImage(novel.Cover, "cover", true, func() *http.Request {
 		bookId, _ := strconv.Atoi(novel.Id)
 		mid := strconv.FormatFloat(math.Floor(float64(bookId)/1000.0), 'f', 0, 64)
 
@@ -102,18 +102,25 @@ func BookParamCheck() (err error) {
 		req.Header.Set("Referer", "https://69shuba.cx/modules/article/search.php")
 		return req
 	})
-
-	novel.SubCover = setImage(novel.SubCover, "sub_cover", false, func() *http.Request {
+	if err != nil {
+		return err
+	}
+	novel.SubCover, err = setImage(novel.SubCover, "sub_cover", false, func() *http.Request {
 		return utils.NewGet(novel.SubCover)
 	})
-	novel.Vol = setImage(novel.Vol, "vol", false, func() *http.Request {
+	if err != nil {
+		return err
+	}
+	novel.Vol, err = setImage(novel.Vol, "vol", false, func() *http.Request {
 		return utils.NewGet(novel.Vol)
 	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func setImage(from, filename string, ifDefaultReq bool, handler func() *http.Request) (source string) {
-	var err error
+func setImage(from, filename string, ifDefaultReq bool, handler func() *http.Request) (source string, err error) {
 	if utils.IsImgFile(from) {
 		if utils.IsFileExist(from) {
 			return

@@ -8,6 +8,7 @@ import (
 	"github.com/go-shiori/go-epub"
 	"path"
 	"strconv"
+	"strings"
 )
 
 // 章节
@@ -15,6 +16,7 @@ const (
 	chapterFilePrefix = `chapter_`
 	htmlP             = `<p>`
 	htmlPEnd          = `</p>`
+	percentSign       = "%"
 )
 
 type InnerURL struct {
@@ -40,18 +42,18 @@ func (e *EpubFormat) InitBook() (err error) {
 	// 初始化书籍信息
 	utils.Fmtf("初始化书籍信息:%s", e.Name)
 	// 添加 css
-	e.InnerURL.css, err = e.AddCSS("assets/styles/main.css", "main.css")
+	e.InnerURL.css, err = e.AddCSS(utils.LocalOrDownload("assets/styles/main.css"), "main.css")
 	if err != nil {
 		utils.Err(err)
 		return
 	}
-	e.AddFont("assets/fonts/font.ttf", "font.ttf")
-	_, err = e.AddCSS("assets/styles/fonts.css", "fonts.css")
+	e.AddFont(utils.LocalOrDownload("assets/fonts/font.ttf"), "font.ttf")
+	_, err = e.AddCSS(utils.LocalOrDownload("assets/styles/fonts.css"), "fonts.css")
 	if err != nil {
 		utils.Err(err)
 		return
 	}
-	err = e.AddMetaINF("assets/META-INF/com.apple.ibooks.display-options.xml")
+	err = e.AddMetaINF(utils.LocalOrDownload("assets/META-INF/com.apple.ibooks.display-options.xml"))
 	if err != nil {
 		utils.Err(err)
 		return
@@ -68,7 +70,7 @@ func (e *EpubFormat) InitBook() (err error) {
 			err = fmt.Errorf("添加封面失败 %w", err)
 			return
 		}
-		coverCss, err = e.AddCSS("assets/styles/cover.css", "cover.css")
+		coverCss, err = e.AddCSS(utils.LocalOrDownload("assets/styles/cover.css"), "cover.css")
 		if err != nil {
 			utils.Err(err)
 			return
@@ -85,7 +87,7 @@ func (e *EpubFormat) InitBook() (err error) {
 	if e.Book.Desc {
 		utils.Fmt("正在添加制作说明...")
 		var insPageCss string
-		insPageCss, err = e.AddCSS("assets/styles/instruction.css", "instruction.css")
+		insPageCss, err = e.AddCSS(utils.LocalOrDownload("assets/styles/instruction.css"), "instruction.css")
 		if err != nil {
 			utils.Err(err)
 			return
@@ -101,7 +103,7 @@ func (e *EpubFormat) InitBook() (err error) {
 	if e.Book.Intro != "" {
 		utils.Fmt("正在添加内容简介...")
 		var logo string
-		logo, err = e.AddImage("assets/images/desc_logo.png", "desc_logo.png")
+		logo, err = e.AddImage(utils.LocalOrDownload("assets/images/desc_logo.png"), "desc_logo.png")
 		if err != nil {
 			return
 		}
@@ -124,7 +126,7 @@ func (e *EpubFormat) InitBook() (err error) {
 			return
 		}
 	} else {
-		e.contentLogo, err = e.AddImage("assets/images/desc_logo.png", "content_logo.png")
+		e.contentLogo, err = e.AddImage(utils.LocalOrDownload("assets/images/desc_logo.png"), "content_logo.png")
 		if err != nil {
 			utils.Err(err)
 			return
@@ -134,6 +136,9 @@ func (e *EpubFormat) InitBook() (err error) {
 }
 
 func (e *EpubFormat) GenContentPrefix(i int, str string) {
+	if strings.Contains(str, percentSign) {
+		str = str + percentSign
+	}
 	e.Book.Chapters[i].Content.WriteString(htmlP + str + htmlPEnd)
 }
 

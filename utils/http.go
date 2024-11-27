@@ -88,3 +88,14 @@ func Domain() string {
 func TocUrl() string {
 	return tocPage
 }
+
+const (
+	githubRaw = "https://gh.idayer.com/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/"
+)
+
+func LocalOrDownload(path string) string {
+	if !IsFileExist(path) {
+		return githubRaw + path
+	}
+	return path
+}

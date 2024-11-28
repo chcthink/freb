@@ -1,7 +1,5 @@
 package models
 
-import "bytes"
-
 // Book 图书
 // Name 书名 Author 作者
 // Cover 封面 SubCover 章封面 Vol 卷图
@@ -17,6 +15,7 @@ type Book struct {
 	Format   string
 	Out      string
 	Lang     string
+	Path     string
 	Desc     bool
 	IsOld    bool
 	// Font     string
@@ -24,7 +23,8 @@ type Book struct {
 }
 
 type Chapter struct {
-	Url     string
-	Title   *bytes.Buffer
-	Content *bytes.Buffer
+	Url      string
+	Title    string
+	Content  string
+	Sections []Chapter
 }

@@ -49,6 +49,7 @@ func GetConfig() error {
 		return fmt.Errorf(cfgErr, err)
 	}
 	err = file.Unmarshal(&Cfg)
+	Cfg.TmpDir = tmp
 	if err != nil {
 		return fmt.Errorf(cfgErr, err)
 	}

@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"freb/config"
 	"freb/models"
 	"freb/source"
+	"freb/source/sources"
 	"freb/utils"
 	"github.com/spf13/cobra"
 	"net/http"
@@ -21,6 +23,7 @@ const (
 	authorCmd = "author"
 	descCmd   = "desc"
 	langCmd   = "lang"
+	pathCmd   = "path"
 	// fontCmd   = "font"
 )
 
@@ -31,8 +34,10 @@ const (
 )
 
 const (
-	flagErr    = "flag 值异常: %s"
-	textUrlErr = "图片地址错误: %s"
+	formatErr = "flag -t(format)值异常: %s"
+	imgUrlErr = "图片地址错误: %s"
+	pathErr   = "文件路径错误: %s"
+	sourceErr = "文件路径或地址错误: %s"
 )
 
 func init() {
@@ -45,6 +50,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&novel.Author, authorCmd, "a", "Unknown", "作者")
 	rootCmd.PersistentFlags().BoolVarP(&novel.Desc, descCmd, "d", true, "是否包含制作说明,默认包含,使用 -d 来取消包含")
 	rootCmd.PersistentFlags().StringVarP(&novel.Lang, langCmd, "l", "zh-Hans", "默认中文zh-Hans,英文 en")
+	rootCmd.PersistentFlags().StringVarP(&novel.Path, pathCmd, "p", "", "转化txt路径")
 	// rootCmd.PersistentFlags().StringVarP(&novel.Font, fontCmd, "w", "", "正文字体字体")
 }
 
@@ -62,7 +68,17 @@ var rootCmd = &cobra.Command{
 		if cmd.PersistentFlags().Changed(descCmd) {
 			novel.Desc = false
 		}
-		var source source.UrlSource
+		var source source.Source
+		if len(novel.Id) > 0 {
+			source = &sources.UrlSource{}
+		}
+		path := novel.Path
+		if len(args) > 0 {
+			path = args[0]
+		}
+		if len(path) > 0 {
+			source = &sources.TxtSource{}
+		}
 		err = source.GetBook(&novel)
 		if err != nil {
 			utils.Err(err)
@@ -82,13 +98,23 @@ func BookParamCheck() (err error) {
 	// format
 	switch novel.Format {
 	case "epub":
-	case "txt":
 	default:
-		return fmt.Errorf(flagErr, formatCmd)
+		return fmt.Errorf(formatErr, formatCmd)
 	}
-	novel.IsOld = utils.NumReg(novel.Id)
+	if len(novel.Path) == 0 && len(novel.Id) == 0 {
+		return errors.New(sourceErr)
+	}
+
+	if len(novel.Path) > 0 {
+		if !utils.IsFileExist(novel.Path) {
+			return fmt.Errorf(pathErr, novel.Path)
+		}
+	}
+	if len(novel.Id) > 0 {
+		novel.IsOld = utils.CheckNum(novel.Id)
+	}
 	// cover subCover vol
-	novel.Cover, err = setImage(novel.Cover, "cover", true, func() *http.Request {
+	novel.Cover, err = setImage(novel.Cover, "cover", len(novel.Path) == 0, func() *http.Request {
 		req := utils.NewGet(utils.CoverUrl(novel.IsOld, novel.Id))
 		req.Header.Set("Referer", utils.SearchUrl(novel.IsOld))
 		return req
@@ -111,25 +137,26 @@ func BookParamCheck() (err error) {
 	return nil
 }
 
-func setImage(from, filename string, ifDefaultReq bool, handler func() *http.Request) (source string, err error) {
+func setImage(from, filename string, ifDefaultReq bool, handler func() *http.Request) (path string, err error) {
 	if utils.IsImgFile(from) {
 		if utils.IsFileExist(from) {
+			path = from
 			return
 		}
 		if ifDefaultReq {
-			source, err = utils.DownloadTmp(config.Cfg.TmpDir, filename, handler)
+			path, err = utils.DownloadTmp(config.Cfg.TmpDir, filename, handler)
 			if err != nil {
-				utils.Warnf(textUrlErr, err.Error())
+				utils.Warnf(imgUrlErr, err.Error())
 			}
 		}
 		return
 	}
 	if utils.CheckUrl(from) {
-		source, err = utils.DownloadTmp(config.Cfg.TmpDir, "cover", func() *http.Request {
+		path, err = utils.DownloadTmp(config.Cfg.TmpDir, "cover", func() *http.Request {
 			return utils.NewGet(novel.Cover)
 		})
 		if err != nil {
-			utils.Warnf(textUrlErr, err.Error())
+			utils.Warnf(imgUrlErr, err.Error())
 		}
 	}
 	return

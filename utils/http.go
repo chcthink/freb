@@ -40,8 +40,6 @@ func GetDom(url string) (doc *goquery.Document, err error) {
 	}
 	req := NewGet(url)
 	resp, err := http.DefaultClient.Do(req)
-	// b, _ := io.ReadAll(resp.Body)
-	// fmt.Println(string(b))
 
 	if err != nil {
 		return nil, err

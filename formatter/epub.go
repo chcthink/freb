@@ -1,6 +1,7 @@
-package formats
+package formatter
 
 import (
+	"bytes"
 	"fmt"
 	"freb/config"
 	"freb/models"
@@ -135,21 +136,28 @@ func (e *EpubFormat) InitBook() (err error) {
 	return
 }
 
-func (e *EpubFormat) GenContentPrefix(i int, str string) {
+func (e *EpubFormat) GenLine(str string) string {
 	if strings.Contains(str, percentSign) {
-		str = str + percentSign
+		str = strings.ReplaceAll(str, percentSign, "%%")
 	}
-	e.Book.Chapters[i].Content.WriteString(htmlP + str + htmlPEnd)
+	return htmlP + str + htmlPEnd
 }
 
-func (e *EpubFormat) GenBookContent(index int) (err error) {
-	title := e.Book.Chapters[index].Title.String()
+func (e *EpubFormat) GenLine2Buffer(str string, buf *bytes.Buffer) {
+	if strings.Contains(str, percentSign) {
+		str = strings.ReplaceAll(str, percentSign, "%%")
+	}
+	buf.WriteString(htmlP + str + htmlPEnd)
+}
+
+func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err error) {
+	title := e.Book.Chapters[index].Title
 	fmt.Printf("\r[%d/%d]\033[K%s", index+1, len(e.Chapters), title)
 	if index+1 == len(e.Chapters) {
 		fmt.Println()
 	}
 	if volNum, vol, isVol := utils.VolByDefaultReg(title); isVol {
-		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.volImage, volNum, vol),
+		volPath, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.volImage, volNum, vol),
 			volNum+" "+vol, volNum+" "+vol+".xhtml", e.InnerURL.css)
 		if err != nil {
 			utils.Err(err)
@@ -159,13 +167,24 @@ func (e *EpubFormat) GenBookContent(index int) (err error) {
 	}
 
 	num, name, subNum := utils.ChapterTitleByDefaultReg(title)
-	_, err = e.AddSection(fmt.Sprintf(config.Cfg.Chapter+e.Book.Chapters[index].Content.String(),
-		e.contentLogo, num, name, subNum), num+" "+name,
-		chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.InnerURL.css)
-	if err != nil {
-		utils.Err(err)
-		return
+	if vol == "" {
+		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Chapter+e.Book.Chapters[index].Content,
+			e.contentLogo, num, name, subNum), num+" "+name,
+			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.InnerURL.css)
+		if err != nil {
+			utils.Err(err)
+			return
+		}
+	} else {
+		_, err = e.AddSubSection(vol, fmt.Sprintf(config.Cfg.Chapter+e.Book.Chapters[index].Content,
+			e.contentLogo, num, name, subNum), num+" "+name,
+			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.InnerURL.css)
+		if err != nil {
+			utils.Err(err)
+			return
+		}
 	}
+
 	return
 }
 

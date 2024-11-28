@@ -7,17 +7,24 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 // req
 const (
-	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15"
-	domain    = "https://69shuba.cx"
-	tocPage   = "https://69shuba.cx/book/%s.htm"
+	userAgent    = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+	oldDomain    = "https://69shuba.cx"
+	domain       = "https://www.69yuedu.net"
+	oldSearchUrl = "https://69shuba.cx/modules/article/search.php"
+	searchUrl    = "https://www.69yuedu.net/modules/article/search.php"
+	coverUrl     = "https://www.69yuedu.net/files/article/image/%s/cover.jpg"
+	oldToc       = "https://69shuba.cx/book/%s.htm"
+	tocPage      = "https://www.69yuedu.net/article/%s.html"
 )
 
 func NewGet(url string) (req *http.Request) {
@@ -33,6 +40,9 @@ func GetDom(url string) (doc *goquery.Document, err error) {
 	}
 	req := NewGet(url)
 	resp, err := http.DefaultClient.Do(req)
+	// b, _ := io.ReadAll(resp.Body)
+	// fmt.Println(string(b))
+
 	if err != nil {
 		return nil, err
 	}
@@ -83,8 +93,27 @@ func Domain() string {
 	return domain
 }
 
-func TocUrl() string {
-	return tocPage
+func SearchUrl(isOld bool) string {
+	if isOld {
+		return oldSearchUrl
+	}
+	return searchUrl
+}
+
+func TocUrl(isOld bool, id string) string {
+	if isOld {
+		return fmt.Sprintf(oldToc, id)
+	}
+	return fmt.Sprintf(tocPage, id)
+}
+
+func CoverUrl(isOld bool, id string) string {
+	if isOld {
+		bookId, _ := strconv.Atoi(id)
+		mid := strconv.FormatFloat(math.Floor(float64(bookId)/1000.0), 'f', 0, 64)
+		return strings.Join([]string{domain, "fengmian", mid, id, id + "s.jpg"}, "/")
+	}
+	return fmt.Sprintf(coverUrl, id)
 }
 
 const (
@@ -107,4 +136,11 @@ func LocalOrDownload(path, tmpDir string) (source string, err error) {
 	}
 
 	return path, err
+}
+
+func EmptyOrDomain(isOld bool) string {
+	if isOld {
+		return ""
+	}
+	return domain
 }

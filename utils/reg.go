@@ -23,11 +23,6 @@ func CheckUrl(url string) bool {
 	return re.MatchString(url)
 }
 
-func GetDomainFromUrl(url string) string {
-	reg := regexp.MustCompile(urlDomain)
-	return reg.FindString(url)
-}
-
 const (
 	ChapterNumReg    = "第[0-9一二三四五六七八九十零〇百千两 ]+[章回节集卷部]|^[Ss]ection.{1,20}$|^[Cc]hapter.{1,20}$|^[Pp]age.{1,20}$|^\\d{1,4}$|^\\d+、|^引子$|^楔子$|^章节目录|^章节|^序章"
 	ChapterSubNumReg = "[(（][0-9一二三四五六七八九十零〇百千两 ][)）]"
@@ -62,13 +57,13 @@ func VolByDefaultReg(str string) (num, title string, isVol bool) {
 	return
 }
 
-func IsTitle(str string) bool {
-	reg := regexp.MustCompile(ChapterNumReg)
-	return reg.MatchString(str)
-}
+// func IsTitle(str string) bool {
+// 	reg := regexp.MustCompile(ChapterNumReg)
+// 	return reg.MatchString(str)
+// }
 
 const (
-	numReg = "[0-9]+.htm"
+	numReg = "[0-9]+"
 )
 
 func NumReg(str string) bool {

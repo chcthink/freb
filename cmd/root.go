@@ -7,11 +7,8 @@ import (
 	"freb/source"
 	"freb/utils"
 	"github.com/spf13/cobra"
-	"math"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -89,18 +86,11 @@ func BookParamCheck() (err error) {
 	default:
 		return fmt.Errorf(flagErr, formatCmd)
 	}
-	// id
-	if novel.Id == "" && utils.NumReg(novel.Id) {
-		return fmt.Errorf(flagErr, idCmd)
-	}
+	novel.IsOld = utils.NumReg(novel.Id)
 	// cover subCover vol
 	novel.Cover, err = setImage(novel.Cover, "cover", true, func() *http.Request {
-		bookId, _ := strconv.Atoi(novel.Id)
-		mid := strconv.FormatFloat(math.Floor(float64(bookId)/1000.0), 'f', 0, 64)
-
-		url := strings.Join([]string{utils.Domain(), "fengmian", mid, novel.Id, novel.Id + "s.jpg"}, "/")
-		req := utils.NewGet(url)
-		req.Header.Set("Referer", "https://69shuba.cx/modules/article/search.php")
+		req := utils.NewGet(utils.CoverUrl(novel.IsOld, novel.Id))
+		req.Header.Set("Referer", utils.SearchUrl(novel.IsOld))
 		return req
 	})
 	if err != nil {

@@ -18,6 +18,7 @@ type Book struct {
 	Out      string
 	Lang     string
 	Desc     bool
+	IsOld    bool
 	// Font     string
 	Chapters []Chapter
 }

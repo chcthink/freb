@@ -4,13 +4,13 @@
 
 #### How to use
 1. 在 [github release界面](https://github.com/chcthink/freb/releases)下载对应系统的可执行文件
-2. 在 [69书吧搜索界面](https://69shuba.cx/modules/article/search.php)找到要下载的小说
-2. 进入`https://69shuba.cx/book/12345.htm` 介绍页,`12345`
+2. 在 [69书吧搜索界面](https://www.69yuedu.net/modules/article/search.php)找到要下载的小说
+2. 进入`https://www.69yuedu.net/article/abcdefg.html` 介绍页,`abcdefg`
 为该书本 ID
 3. 在命令行输入以下命令下载小说
 ``` sh
 # ID 为 69 书吧小说的 ID
-./freb -i 46901 ID
+./freb -i abcdefg ID
 ```
 
 #### Tips

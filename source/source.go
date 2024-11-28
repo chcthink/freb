@@ -2,7 +2,7 @@ package source
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"freb/config"
 	"freb/formatter"
 	"freb/formatter/formats"
@@ -11,6 +11,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -22,7 +23,7 @@ type UrlSource struct {
 
 func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	start := time.Now()
-	doc, err := utils.GetDom(fmt.Sprintf(utils.TocUrl(), book.Id))
+	doc, err := utils.GetDom(utils.TocUrl(book.IsOld, book.Id))
 	if err != nil {
 		return err
 	}
@@ -31,28 +32,51 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	if book.Author == "Unknown" {
 		book.Author = doc.Find("div.booknav2 p a[href*='author']").Text()
 	}
-	book.Intro = doc.Find("div.content").Text()
+
+	var toc, tocSlt, titleSlt, contentSlt string
+	if !book.IsOld {
+		book.Intro = doc.Find("div.navtxt p:first-child").Text()
+
+		toc, _ = doc.Find("a.btn:first-child").Attr("href")
+		toc = utils.Domain() + toc
+
+		titleSlt = "div.chaptertitle h1"
+		contentSlt = "div.content"
+		tocSlt = "div#chapters ul li"
+	} else {
+		book.Intro = doc.Find("div.content").Text()
+		toc, _ = doc.Find("a.more-btn").Attr("href")
+
+		titleSlt = "div.txtnav h1"
+		contentSlt = "div.txtnav"
+		tocSlt = "div#catalog ul li"
+	}
 
 	// chapter
 	utils.Fmt("正在获取目录信息...")
-	toc, _ := doc.Find("a.more-btn").Attr("href")
 	doc, err = utils.GetDom(toc)
 	if err != nil {
 		return err
 	}
 
 	var total int
-	doc.Find("div#catalog ul li").Each(func(i int, s *goquery.Selection) {
+	numStr, _ := doc.Find(tocSlt + ":last-child").Attr("data-num")
+	if numStr == "1" {
+		numStr, _ = doc.Find(tocSlt + ":first-child").Attr("data-num")
+	}
+	total, _ = strconv.Atoi(numStr)
+	doc.Find(tocSlt).Each(func(i int, s *goquery.Selection) {
 		if i == 0 {
-			numStr, _ := s.Attr("data-num")
-			num, _ := strconv.Atoi(numStr)
-			total = num
-			book.Chapters = make([]models.Chapter, num)
+			book.Chapters = make([]models.Chapter, total)
 		}
 		book.Chapters[i].Title = &bytes.Buffer{}
 		book.Chapters[i].Content = &bytes.Buffer{}
-		book.Chapters[total-i-1].Url, _ = s.Find("a").Attr("href")
+		book.Chapters[i].Url, _ = s.Find("a").Attr("href")
+		book.Chapters[i].Url = utils.EmptyOrDomain(book.IsOld) + book.Chapters[i].Url
 	})
+	if len(book.Chapters) == 0 {
+		return errors.New("爬取错误: 章节数为 0")
+	}
 	utils.Fmtf("章节数: %d", len(book.Chapters))
 	// confirm format
 	var novel formatter.Formatter
@@ -66,14 +90,15 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	}
 	// contents
 	utils.Fmt("正在添加章节...")
+	// return
 	for i, chapter := range book.Chapters {
 		doc, err = utils.GetDom(chapter.Url)
 		if err != nil {
 			return
 		}
 
-		node := doc.Find("div.txtnav").Contents()
-		book.Chapters[i].Title.WriteString(doc.Find("div.txtnav h1").Text())
+		node := doc.Find(contentSlt).Contents()
+		book.Chapters[i].Title.WriteString(doc.Find(titleSlt).Text())
 		var f func(*html.Node)
 		f = func(n *html.Node) {
 			if n.DataAtom == atom.Div || n.DataAtom == atom.H1 {
@@ -84,7 +109,10 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 				if raw == "" {
 					return
 				}
-				if strings.Contains(n.Data, "本章完") || utils.IsTitle(n.Data) {
+				if utils.EqAllWithoutSpace(book.Chapters[i].Title.String(), n.Data) {
+					return
+				}
+				if strings.Contains(n.Data, "本章完") {
 					return
 				}
 				if book.Format == "epub" {
@@ -102,11 +130,14 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		for _, n := range node.Nodes {
 			f(n)
 		}
-
+		if book.Chapters[i].Content.String() == "" {
+			return errors.New("爬取频率问题")
+		}
 		err = novel.GenBookContent(i)
 		if err != nil {
 			return
 		}
+		time.Sleep(time.Duration(rand.Intn(3000)) * time.Millisecond)
 	}
 	err = novel.Build()
 	if err != nil {

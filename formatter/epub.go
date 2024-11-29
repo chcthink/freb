@@ -137,17 +137,11 @@ func (e *EpubFormat) InitBook() (err error) {
 }
 
 func (e *EpubFormat) GenLine(str string) string {
-	if strings.Contains(str, percentSign) {
-		str = strings.ReplaceAll(str, percentSign, "%%")
-	}
-	return htmlP + str + htmlPEnd
+	return htmlP + strings.ReplaceAll(str, percentSign, "%%") + htmlPEnd
 }
 
 func (e *EpubFormat) GenLine2Buffer(str string, buf *bytes.Buffer) {
-	if strings.Contains(str, percentSign) {
-		str = strings.ReplaceAll(str, percentSign, "%%")
-	}
-	buf.WriteString(htmlP + str + htmlPEnd)
+	buf.WriteString(htmlP + strings.ReplaceAll(str, percentSign, "%%") + htmlPEnd)
 }
 
 func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err error) {

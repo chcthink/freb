@@ -28,7 +28,8 @@ type Selector struct {
 type Config struct {
 	*Style
 	*Selector
-	TmpDir string `toml:"-"`
+	TmpDir    string `toml:"-"`
+	DelayTime int    `toml:"delay_time"`
 }
 
 var Cfg Config

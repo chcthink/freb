@@ -30,9 +30,9 @@ const (
 )
 
 func ChapterTitleByDefaultReg(str string) (num, title, subNum string) {
-	numReg := regexp.MustCompile(ChapterNumReg)
+	numTitleReg := regexp.MustCompile(ChapterNumReg)
 	SubNumReg := regexp.MustCompile(ChapterSubNumReg)
-	num = numReg.FindString(str)
+	num = numTitleReg.FindString(str)
 	subNum = SubNumReg.FindString(str)
 	title = str
 	if num != "" {
@@ -45,6 +45,16 @@ func ChapterTitleByDefaultReg(str string) (num, title, subNum string) {
 		title = strings.TrimSpace(title)
 	}
 	return
+}
+
+func PureTitle(str string) (title string) {
+	numTitleReg := regexp.MustCompile(ChapterNumReg)
+	num := numTitleReg.FindString(str)
+	title = str
+	if num != "" {
+		return num + " " + strings.TrimSpace(strings.Split(title, num)[1])
+	}
+	return str
 }
 
 func VolByDefaultReg(str string) (num, title string, isVol bool) {

@@ -33,6 +33,7 @@ func IsFileExist(path string) bool {
 	return true
 }
 
-func EqAllWithoutSpace(str1, str2 string) bool {
-	return strings.ReplaceAll(str1, " ", "") == strings.ReplaceAll(str2, " ", "")
+func ReplaceTitle(str, title string) (ret string) {
+	ret = strings.ReplaceAll(str, title, "")
+	return strings.ReplaceAll(ret, strings.ReplaceAll(title, " ", ""), "")
 }

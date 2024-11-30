@@ -9,7 +9,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
-	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -92,7 +91,12 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		}
 
 		node := doc.Find(contentSlt).Contents()
-		book.Chapters[i].Title = doc.Find(titleSlt).Text()
+		book.Chapters[i].Title = strings.TrimSpace(doc.Find(titleSlt).Text())
+		if book.Chapters[i].Title == "" {
+			return errors.New("当前章节爬取错误")
+		}
+		book.Chapters[i].Title = utils.PureTitle(book.Chapters[i].Title)
+
 		var f func(*html.Node)
 		f = func(n *html.Node) {
 			if n.DataAtom == atom.Div || n.DataAtom == atom.H1 {
@@ -103,13 +107,16 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 				if raw == "" {
 					return
 				}
-				if utils.EqAllWithoutSpace(book.Chapters[i].Title, n.Data) {
+				if utils.CheckTitle(raw) {
+					raw = utils.ReplaceTitle(raw, book.Chapters[i].Title)
+					if raw == "" {
+						return
+					}
+				}
+				if strings.Contains(raw, "本章完") {
 					return
 				}
-				if strings.Contains(n.Data, "本章完") {
-					return
-				}
-				book.Chapters[i].Content = ef.GenLine(raw)
+				book.Chapters[i].Content += ef.GenLine(raw)
 			}
 			if n.FirstChild != nil {
 				for c := n.FirstChild; c != nil; c = c.NextSibling {
@@ -124,7 +131,7 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		if err != nil {
 			return
 		}
-		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
+		time.Sleep(time.Duration(config.Cfg.DelayTime) * time.Millisecond)
 	}
 	err = ef.Build()
 	if err != nil {

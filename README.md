@@ -1,6 +1,9 @@
 
 #### 介绍
-用于下载小说并以 EPub 格式存储,支持Apple books(ibooks)自定义字体
+ - 下载小说并以 EPub 格式存储,支持Apple books(ibooks)自定义字体
+ - 转化 TXT 至 EPub
+
+> 限制爬取频率为 每章节/1.5s
 
 #### How to use
 ##### (一) 爬取小说并转化为 EPub

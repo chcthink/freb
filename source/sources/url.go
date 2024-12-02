@@ -7,6 +7,8 @@ import (
 	"freb/models"
 	"freb/utils"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/adrg/strutil"
+	"github.com/adrg/strutil/metrics"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 	"os"
@@ -113,18 +115,12 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 				if raw == "" {
 					return
 				}
-				if utils.CheckTitle(raw) {
-					raw = utils.ReplaceTitle(raw, book.Chapters[i].Title)
-					if raw == "" {
-						return
-					}
+				if strutil.Similarity(raw, book.Chapters[i].Title, metrics.NewJaro()) > 0.75 {
+					return
 				}
 				if strings.Contains(raw, "本章完") {
 					return
 				}
-				raw = strings.ReplaceAll(raw, "<", "&lt;")
-				raw = strings.ReplaceAll(raw, ">", "&gt;")
-				raw = strings.ReplaceAll(raw, "&", "&amp;")
 				book.Chapters[i].Content += ef.GenLine(raw)
 			}
 			if n.FirstChild != nil {

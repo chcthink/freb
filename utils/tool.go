@@ -37,3 +37,9 @@ func ReplaceTitle(str, title string) (ret string) {
 	ret = strings.ReplaceAll(str, title, "")
 	return strings.ReplaceAll(ret, strings.ReplaceAll(title, " ", ""), "")
 }
+
+func PureEscapeHtml(str string) string {
+	str = strings.ReplaceAll(str, "<", "&lt;")
+	str = strings.ReplaceAll(str, ">", "&gt;")
+	return strings.ReplaceAll(str, "&", "&amp;")
+}

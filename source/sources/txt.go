@@ -87,9 +87,6 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 			return fmt.Errorf("读取文件出错: %w", err)
 		}
 		line = strings.TrimSpace(line)
-		line = strings.ReplaceAll(line, "<", "&lt;")
-		line = strings.ReplaceAll(line, ">", "&gt;")
-		line = strings.ReplaceAll(line, "&", "&amp;")
 		// 空行直接跳过
 		if len(line) == 0 {
 			continue

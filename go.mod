@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/adrg/strutil v0.3.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
 	github.com/gofrs/uuid/v5 v5.3.0 // indirect

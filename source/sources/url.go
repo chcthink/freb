@@ -122,6 +122,9 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 				if strings.Contains(raw, "本章完") {
 					return
 				}
+				raw = strings.ReplaceAll(raw, "<", "&lt;")
+				raw = strings.ReplaceAll(raw, ">", "&gt;")
+				raw = strings.ReplaceAll(raw, "&", "&amp;")
 				book.Chapters[i].Content += ef.GenLine(raw)
 			}
 			if n.FirstChild != nil {

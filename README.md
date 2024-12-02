@@ -23,7 +23,7 @@
 ```shell
 # -p 指定路径 -a 指定作者 -c 指定封面路径 默认为当前目录下的cover.png
 # -o 输出路径
-./freb -p xxx.txt -a xxx -o xxx.epub
+./freb -p xxx.txt -a xxx -c cover.png -o xxx.epub
 ```
 
 #### Tips
@@ -31,3 +31,6 @@
  - 可以通过修改 `assets`目录和 `config.toml` 文件来自定义 EPub
  - txt 读取整合 [kaf-cli](https://github.com/ystyle/kaf-cli)
  - 排版样式参考使用“阡陌居-笙歌夜夜”
+
+#### 已知问题
+ - 封面下载 403,建议自行下载图片至本地 -c 指定封面

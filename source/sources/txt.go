@@ -59,7 +59,6 @@ func readBuffer(filename string) *bufio.Reader {
 
 func (t *TxtSource) GetBook(book *models.Book) error {
 	var contentList []models.Chapter
-	var a []string
 	var ef formatter.EpubFormat
 	ef.Book = book
 	err := ef.InitBook()
@@ -90,23 +89,22 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 		line = strings.TrimSpace(line)
 		line = strings.ReplaceAll(line, "<", "&lt;")
 		line = strings.ReplaceAll(line, ">", "&gt;")
+		line = strings.ReplaceAll(line, "&", "&amp;")
 		// 空行直接跳过
 		if len(line) == 0 {
 			continue
 		}
 		// 处理标题
 		if utf8.RuneCountInString(line) <= titleMax &&
-			(utils.CheckTitle(line) || utils.CheckVol(line)) {
+			(utils.CheckTitle(line) || utils.CheckVol(line) || utils.CheckIntro(line)) {
 			if title == "" {
 				title = unknownTitle
 			}
 			if content.Len() > 0 || title != unknownTitle {
-				fmt.Println(content)
 				contentList = append(contentList, models.Chapter{
 					Title:   title,
 					Content: content.String(),
 				})
-				a = append(a, content.String())
 			}
 			title = line
 			content.Reset()
@@ -124,38 +122,17 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 			Content: content.String(),
 		})
 	}
-	// var sectionList []models.Chapter
 	book.Chapters = contentList
 	var volPath string
 	for i := range book.Chapters {
 		volPath, err = ef.GenBookContent(i, volPath)
-		// if utils.CheckVol(section.Title) {
-		// 	if volumeSection != nil {
-		// 		sectionList = append(sectionList, *volumeSection)
-		// 		volumeSection = nil
-		// 	}
-		// 	volumeSection = &section
-		//
-		// } else {
-		// 	if volumeSection == nil {
-		// 		sectionList = append(sectionList, section)
-		// 	} else {
-		// 		volumeSection.Sections = append(volumeSection.Sections, section)
-		// 	}
-		// }
 	}
-	// 如果有最后一卷,添加到章节列表
-	// if volumeSection != nil {
-	// 	sectionList = append(sectionList, *volumeSection)
-	// 	volumeSection = nil
-	// }
 	err = ef.Build()
 	if err != nil {
 		return err
 	}
 	end := time.Now().Sub(start)
 	fmt.Println("\n已生成书籍,使用时长: ", end)
-	// fmt.Println("匹配章节:", sectionCount(sectionList))
 	return nil
 }
 

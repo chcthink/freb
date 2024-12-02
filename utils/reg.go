@@ -24,6 +24,7 @@ func CheckUrl(url string) bool {
 }
 
 const (
+	IntroReg         = "(文章|内容)简介([:：])?"
 	ChapterNumReg    = "第[0-9一二三四五六七八九十零〇百千两 ]+[章回节集卷部]|^[Ss]ection.{1,20}$|^[Cc]hapter.{1,20}$|^[Pp]age.{1,20}$|^引子$|^楔子$|^章节目录|^章节|^序章"
 	ChapterSubNumReg = "[(（][0-9一二三四五六七八九十零〇百千两 ][)）]"
 	volReg           = "^第[0-9一二三四五六七八九十零〇百千两 ]+[卷部]"
@@ -83,5 +84,10 @@ const (
 
 func CheckNum(str string) bool {
 	reg := regexp.MustCompilePOSIX(numReg)
+	return reg.MatchString(str)
+}
+
+func CheckIntro(str string) bool {
+	reg := regexp.MustCompile(IntroReg)
 	return reg.MatchString(str)
 }

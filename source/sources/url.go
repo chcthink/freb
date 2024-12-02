@@ -57,17 +57,23 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	}
 
 	var total int
+	var isReverse bool
 	numStr, _ := doc.Find(tocSlt + ":last-child").Attr("data-num")
 	if numStr == "1" {
+		isReverse = true
 		numStr, _ = doc.Find(tocSlt + ":first-child").Attr("data-num")
 	}
 	total, _ = strconv.Atoi(numStr)
 	doc.Find(tocSlt).Each(func(i int, s *goquery.Selection) {
+		index := i
+		if isReverse {
+			index = total - 1 - i
+		}
 		if i == 0 {
 			book.Chapters = make([]models.Chapter, total)
 		}
-		book.Chapters[i].Url, _ = s.Find("a").Attr("href")
-		book.Chapters[i].Url = utils.EmptyOrDomain(book.IsOld) + book.Chapters[i].Url
+		book.Chapters[index].Url, _ = s.Find("a").Attr("href")
+		book.Chapters[index].Url = utils.EmptyOrDomain(book.IsOld) + book.Chapters[index].Url
 	})
 	if len(book.Chapters) == 0 {
 		return errors.New("爬取错误: 章节数为 0")

@@ -12,7 +12,6 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -63,9 +62,8 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	numStr, _ := doc.Find(tocSlt + ":last-child").Attr("data-num")
 	if numStr == "1" {
 		isReverse = true
-		numStr, _ = doc.Find(tocSlt + ":first-child").Attr("data-num")
 	}
-	total, _ = strconv.Atoi(numStr)
+	total = doc.Find(tocSlt).Length()
 	doc.Find(tocSlt).Each(func(i int, s *goquery.Selection) {
 		index := i
 		if isReverse {
@@ -90,9 +88,11 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	}
 	// contents
 	utils.Fmt("正在添加章节...")
-	// return
 	var volPath string
 	for i, chapter := range book.Chapters {
+		if chapter.Url == "" {
+			continue
+		}
 		doc, err = utils.GetDom(chapter.Url)
 		if err != nil {
 			return

@@ -9,9 +9,10 @@
 ##### (一) 爬取小说并转化为 EPub
 1. 在 [github release界面](https://github.com/chcthink/freb/releases)下载对应系统的可执行文件
 2. 在 [69书吧搜索界面](https://www.69yuedu.net/modules/article/search.php)找到要下载的小说
-2. 进入`https://www.69yuedu.net/article/abcdefg.html` 介绍页,`abcdefg`
+3. 进入`https://www.69yuedu.net/article/abcdefg.html` 介绍页,`abcdefg`
 为该书本 ID
-3. 在命令行输入以下命令下载小说
+4. 自行定义 config.toml 配置,如 每章下载延时delay_time
+5. 在命令行输入以下命令下载小说
 
 ``` shell
 # ID 为 69 书吧小说的 ID
@@ -31,6 +32,7 @@
  - 可以通过修改 `assets`目录和 `config.toml` 文件来自定义 EPub
  - txt 读取整合 [kaf-cli](https://github.com/ystyle/kaf-cli)
  - 排版样式参考使用“阡陌居-笙歌夜夜”
+ - 起点封面 https://bookcover.yuewen.com/qdbimg/[作者id]/[小说id]/[140|600]
 
 #### 已知问题
  - 封面下载 403,建议自行下载图片至本地 -c 指定封面

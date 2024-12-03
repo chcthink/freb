@@ -91,3 +91,12 @@ func CheckIntro(str string) bool {
 	reg := regexp.MustCompile(IntroReg)
 	return reg.MatchString(str)
 }
+
+const (
+	c0ControlReg = `[\x00-\x1F]`
+)
+
+func ReplaceC0Control(str string) string {
+	reg := regexp.MustCompile(c0ControlReg)
+	return reg.ReplaceAllString(str, "")
+}

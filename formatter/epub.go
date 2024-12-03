@@ -136,13 +136,18 @@ func (e *EpubFormat) InitBook() (err error) {
 	return
 }
 
-func (e *EpubFormat) GenLine(str string) string {
+func cleanHTML(str string) string {
 	str = utils.PureEscapeHtml(str)
+	return utils.ReplaceC0Control(str)
+}
+
+func (e *EpubFormat) GenLine(str string) string {
+	str = cleanHTML(str)
 	return htmlP + strings.ReplaceAll(str, percentSign, "%%") + htmlPEnd
 }
 
 func (e *EpubFormat) GenLine2Buffer(str string, buf *bytes.Buffer) {
-	str = utils.PureEscapeHtml(str)
+	str = cleanHTML(str)
 	buf.WriteString(htmlP + strings.ReplaceAll(str, percentSign, "%%") + htmlPEnd)
 }
 

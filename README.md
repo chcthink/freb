@@ -1,10 +1,13 @@
 
 #### 介绍
- - 下载小说并以 EPub 格式存储,支持Apple books(ibooks)自定义字体
+ - 下载小说并以 EPub 格式存储
  - 转化 TXT 至 EPub
 
-> 限制爬取频率为 每章节/1.5s
+> 限制爬取频率(config.toml delay_time)为 每章节/1.5s
 
+#### 功能
+ - 支持Apple books(ibooks)自定义字体
+ - 删除多余字符
 #### How to use
 ##### (一) 爬取小说并转化为 EPub
 1. 在 [github release界面](https://github.com/chcthink/freb/releases)下载对应系统的可执行文件

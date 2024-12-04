@@ -9,8 +9,8 @@ import (
 )
 
 func TestSimilarity(t *testing.T) {
-	raw := "第87章 我们以前……不这样的"
-	title := "87.第87章 我们以前不这样的"
+	raw := "第87章 您已被……移出群聊"
+	title := "87.第87章您已被移出群聊"
 	algorithms := map[string]strutil.StringMetric{
 		"newHamming":         metrics.NewHamming(),
 		"Levenshtein":        metrics.NewLevenshtein(),

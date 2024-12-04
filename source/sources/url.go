@@ -105,6 +105,7 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		}
 		book.Chapters[i].Title = utils.PureTitle(book.Chapters[i].Title)
 
+		contentLen := len(node.Nodes)
 		var f func(*html.Node)
 		f = func(n *html.Node) {
 			if n.DataAtom == atom.Div || n.DataAtom == atom.H1 {
@@ -115,7 +116,8 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 				if raw == "" {
 					return
 				}
-				if strutil.Similarity(raw, book.Chapters[i].Title, metrics.NewJaro()) > 0.75 {
+				// filter title in content
+				if strutil.Similarity(raw, book.Chapters[i].Title, metrics.NewJaro()) > 0.75 && i <= contentLen/3 {
 					return
 				}
 				if strings.Contains(raw, "本章完") {

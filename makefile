@@ -7,7 +7,7 @@ git:
 	git add . && git cz && git push origin
 
 tag:
-	git add . && git cz && git tag $(VERSION) && git push origin $(VERSION)
+	$(MAKE) git && git tag $(VERSION) && git push origin $(VERSION)
 
 tag-build:
 	$(MAKE) tag && $(MAKE) build-all

@@ -106,8 +106,8 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		book.Chapters[i].Title = utils.PureTitle(book.Chapters[i].Title)
 
 		contentLen := len(node.Nodes)
-		var f func(*html.Node)
-		f = func(n *html.Node) {
+		var f func(int, *html.Node)
+		f = func(index int, n *html.Node) {
 			if n.DataAtom == atom.Div || n.DataAtom == atom.H1 {
 				return
 			}
@@ -117,7 +117,7 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 					return
 				}
 				// filter title in content
-				if strutil.Similarity(raw, book.Chapters[i].Title, metrics.NewJaro()) > 0.75 && i <= contentLen/3 {
+				if strutil.Similarity(raw, book.Chapters[i].Title, metrics.NewJaro()) > 0.75 && index <= contentLen/3 {
 					return
 				}
 				if strings.Contains(raw, "本章完") {
@@ -127,12 +127,12 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 			}
 			if n.FirstChild != nil {
 				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					f(c)
+					f(index, c)
 				}
 			}
 		}
-		for _, n := range node.Nodes {
-			f(n)
+		for index, n := range node.Nodes {
+			f(index, n)
 		}
 		volPath, err = ef.GenBookContent(i, volPath)
 		if err != nil {

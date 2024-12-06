@@ -40,7 +40,6 @@ p.desc-3{
 	text-align: right;
 }
 div.pg {
-    /* 分卷顶部图片 */
     margin:35% auto 0 auto;
     text-align: center;
     text-indent: 0em;
@@ -49,6 +48,9 @@ div.pg {
 }
 img.pg {
     width: 20%;
+    height: auto;        /* 保持图片比例 */
+    border-radius: 50%;  /* 将图片变成圆形 */
+    object-fit: cover;
 }
 
 /* 分卷页 */
@@ -73,7 +75,10 @@ div.vol-logo {
     /* duokan-bleed: lefttopright;*/
 }
 img.vol-logo {
-    width: 20%;
+    width: 40%;
+    height: auto;        /* 保持图片比例 */
+    border-radius: 50%;  /* 将图片变成圆形 */
+    object-fit: cover;
 }
 .c1{
     /* 卷名 */
@@ -106,6 +111,9 @@ div.logo {
 }
 img.logo {
     width: 30%;
+    height: auto;        /* 保持图片比例 */
+    border-radius: 50%;  /* 将图片变成圆形 */
+    object-fit: cover;
 }
 h2 {
     /* 章节名 */
@@ -128,6 +136,12 @@ h2 {
     color: #fff;
     font-size: small;
     text-align: center;
+}
+.num:empty {
+    background-color: transparent; /* 或者指定默认背景色 */
+    color: inherit; /* 继承默认字体颜色 */
+    padding: 0; /* 移除内边距 */
+    border-radius: 0; /* 移除圆角 */
 }
 .num-2 {
     /* 章节名序号 */

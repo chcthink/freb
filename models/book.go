@@ -2,22 +2,23 @@ package models
 
 // Book 图书
 // Name 书名 Author 作者
-// Cover 封面 SubCover 章封面 Vol 卷图
+// Cover 封面 ContentImg 章封面 Vol 卷图
 // Chapters 章节
 type Book struct {
-	Name     string
-	Id       string
-	Cover    string
-	SubCover string
-	Vol      string
-	Author   string
-	Intro    string
-	Format   string
-	Out      string
-	Lang     string
-	Path     string
-	Desc     bool
-	IsOld    bool
+	Name       string
+	Id         string
+	Cover      string
+	ContentImg string
+	IntroImg   string
+	Vol        string
+	Author     string
+	Intro      string
+	Format     string
+	Out        string
+	Lang       string
+	Path       string
+	Desc       bool
+	IsOld      bool
 	// Font     string
 	Chapters []Chapter
 }

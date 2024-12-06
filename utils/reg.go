@@ -28,6 +28,8 @@ const (
 	ChapterNumReg    = "第[0-9一二三四五六七八九十零〇百千两 ]+[章回节集卷部]|^[Ss]ection.{1,20}$|^[Cc]hapter.{1,20}$|^[Pp]age.{1,20}$|^引子$|^楔子$|^章节目录|^章节|^序章"
 	ChapterSubNumReg = "[(（][0-9一二三四五六七八九十零〇百千两 ][)）]"
 	volReg           = "^第[0-9一二三四五六七八九十零〇百千两 ]+[卷部]"
+	authorReg        = "作者([:：])?"
+	endReg           = "大结局|最终话"
 )
 
 func ChapterTitleByDefaultReg(str string) (num, title, subNum string) {
@@ -78,6 +80,28 @@ func CheckTitle(str string) bool {
 	return reg.MatchString(str)
 }
 
+func CheckEnd(str string) bool {
+	reg := regexp.MustCompile(endReg)
+	return reg.MatchString(str)
+}
+
+func GetAuthor(str string) (isAuthor bool, author string) {
+	reg := regexp.MustCompile(authorReg)
+	isAuthor = reg.MatchString(str)
+	if isAuthor {
+		author = strings.TrimSpace(reg.ReplaceAllString(str, ""))
+	}
+	return
+}
+
+func AuthorIndex(str string) int {
+	reg := regexp.MustCompile(authorReg)
+	if reg.MatchString(str) {
+		return reg.FindStringIndex(str)[1]
+	}
+	return -1
+}
+
 const (
 	numReg = "[0-9]+"
 )
@@ -87,9 +111,13 @@ func CheckNum(str string) bool {
 	return reg.MatchString(str)
 }
 
-func CheckIntro(str string) bool {
+func GetIntro(str string) (isIntro bool, intro string) {
 	reg := regexp.MustCompile(IntroReg)
-	return reg.MatchString(str)
+	isIntro = reg.MatchString(str)
+	if isIntro {
+		intro = strings.TrimSpace(reg.ReplaceAllString(str, ""))
+	}
+	return
 }
 
 const (

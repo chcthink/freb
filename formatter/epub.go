@@ -15,26 +15,28 @@ import (
 // 章节
 const (
 	chapterFilePrefix = `chapter_`
+	volFilePrefix     = `vol_`
 	htmlP             = `<p>`
 	htmlPEnd          = `</p>`
 	percentSign       = "%"
 )
 
-type InnerURL struct {
+type Inner struct {
 	volImage    string
-	css         string
 	contentLogo string
+	css         string
+	volIndex    int
 }
 
 type EpubFormat struct {
 	*epub.Epub
 	*models.Book
-	*InnerURL
+	*Inner
 }
 
 func (e *EpubFormat) InitBook() (err error) {
 	e.Epub, err = epub.NewEpub(e.Book.Name)
-	e.InnerURL = &InnerURL{}
+	e.Inner = &Inner{}
 	if err != nil {
 		utils.Err(err)
 		return
@@ -43,7 +45,7 @@ func (e *EpubFormat) InitBook() (err error) {
 	// 初始化书籍信息
 	utils.Fmtf("初始化书籍信息:%s", e.Name)
 	// 添加 css
-	e.InnerURL.css, err = e.AddCSS(utils.LocalOrUrl("assets/styles/main.css"), "main.css")
+	e.Inner.css, err = e.AddCSS(utils.LocalOrUrl("assets/styles/main.css"), "main.css")
 	if err != nil {
 		utils.Err(err)
 		return
@@ -104,30 +106,24 @@ func (e *EpubFormat) InitBook() (err error) {
 	if e.Book.Intro != "" {
 		utils.Fmt("正在添加内容简介...")
 		var logo string
-		logo, err = e.AddImage(utils.LocalOrUrl("assets/images/desc_logo.png"), "desc_logo.png")
+		logo, err = e.AddImage(e.IntroImg, path.Base(e.IntroImg))
 		if err != nil {
 			return
 		}
-		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Desc.Dom, logo, e.Book.Intro), config.Cfg.Desc.Title, "desc.xhtml", e.InnerURL.css)
+		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Desc.Dom, logo, e.Book.Intro), config.Cfg.Desc.Title, "desc.xhtml", e.Inner.css)
 		if err != nil {
 			return
 		}
 	}
 	if e.Book.Vol != "" {
-		e.volImage, err = e.AddImage(e.Book.Vol, "vol.png")
+		e.volImage, err = e.AddImage(e.Vol, path.Base(e.Vol))
 		if err != nil {
 			utils.Err(err)
 			return
 		}
 	}
-	if e.Book.SubCover != "" {
-		e.contentLogo, err = e.AddImage(e.Book.SubCover, "sub_cover.png")
-		if err != nil {
-			utils.Err(err)
-			return
-		}
-	} else {
-		e.contentLogo, err = e.AddImage(utils.LocalOrUrl("assets/images/desc_logo.png"), "content_logo.png")
+	if e.Book.ContentImg != "" {
+		e.contentLogo, err = e.AddImage(e.Book.ContentImg, path.Base(e.ContentImg))
 		if err != nil {
 			utils.Err(err)
 			return
@@ -141,14 +137,18 @@ func cleanHTML(str string) string {
 	return utils.ReplaceC0Control(str)
 }
 
+func genLine(str string) string {
+	return htmlP + strings.ReplaceAll(str, percentSign, "%%") + htmlPEnd
+}
+
 func (e *EpubFormat) GenLine(str string) string {
 	str = cleanHTML(str)
-	return htmlP + strings.ReplaceAll(str, percentSign, "%%") + htmlPEnd
+	return genLine(str)
 }
 
 func (e *EpubFormat) GenLine2Buffer(str string, buf *bytes.Buffer) {
 	str = cleanHTML(str)
-	buf.WriteString(htmlP + strings.ReplaceAll(str, percentSign, "%%") + htmlPEnd)
+	buf.WriteString(genLine(str))
 }
 
 func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err error) {
@@ -158,8 +158,9 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 		fmt.Println()
 	}
 	if volNum, volTitle, isVol := utils.VolByDefaultReg(title); isVol {
+		e.volIndex += 1
 		volPath, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.volImage, volNum, volTitle),
-			volNum+" "+volTitle, volNum+" "+volTitle+".xhtml", e.InnerURL.css)
+			volNum+" "+volTitle, volFilePrefix+strconv.Itoa(e.volIndex)+".xhtml", e.Inner.css)
 		if err != nil {
 			utils.Err(err)
 			return
@@ -171,7 +172,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 	if vol == "" {
 		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Chapter+e.Book.Chapters[index].Content,
 			e.contentLogo, num, name, subNum), num+" "+name,
-			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.InnerURL.css)
+			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.Inner.css)
 		if err != nil {
 			utils.Err(err)
 			return
@@ -179,7 +180,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 	} else {
 		_, err = e.AddSubSection(vol, fmt.Sprintf(config.Cfg.Chapter+e.Book.Chapters[index].Content,
 			e.contentLogo, num, name, subNum), num+" "+name,
-			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.InnerURL.css)
+			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.Inner.css)
 		if err != nil {
 			utils.Err(err)
 			return

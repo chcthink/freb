@@ -25,7 +25,7 @@ const (
 type TxtSource struct {
 }
 
-func readBuffer(filename string) *bufio.Reader {
+func getBuffer(filename string) *bufio.Reader {
 	f, err := os.Open(filename)
 	defer f.Close()
 	if err != nil {
@@ -61,20 +61,19 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 	var contentList []models.Chapter
 	var ef formatter.EpubFormat
 	ef.Book = book
-	err := ef.InitBook()
-	if err != nil {
-		return err
-	}
+
 	fmt.Println("正在读取txt文件...")
 	start := time.Now()
-	buf := readBuffer(book.Path)
+	buf := getBuffer(book.Path)
 	var title string
 	content := &bytes.Buffer{}
+	tmp := ""
+	isIntro := false
 	for {
 		line, err := buf.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				if line = strings.TrimSpace(line); line != "" {
+				if line = strings.TrimSpace(line); line != "" && !checkComment(line) {
 					ef.GenLine2Buffer(line, content)
 				}
 				contentList = append(contentList, models.Chapter{
@@ -91,9 +90,42 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 		if len(line) == 0 {
 			continue
 		}
+		// 跳过注释行
+		if checkComment(line) {
+			if len(contentList) == 0 {
+				content.Reset()
+			}
+			continue
+		}
+		if len(contentList) == 0 {
+			if isAuthor, author := utils.GetAuthor(line); isAuthor {
+				ef.Book.Author = author
+				if tmp != "" {
+					ef.Book.Name = tmp
+				}
+				continue
+			}
+			tmp = line
+			intro := ""
+			if !isIntro {
+				if isIntro, intro = utils.GetIntro(line); isIntro {
+					if intro != "" {
+						ef.Intro = intro
+					}
+					continue
+				}
+			}
+			if !(utils.CheckTitle(line) || utils.CheckVol(line)) && isIntro {
+				ef.Intro += line
+			} else {
+				isIntro = false
+				content.Reset()
+			}
+		}
+
 		// 处理标题
 		if utf8.RuneCountInString(line) <= titleMax &&
-			(utils.CheckTitle(line) || utils.CheckVol(line) || utils.CheckIntro(line)) {
+			(utils.CheckTitle(line) || utils.CheckVol(line) || utils.CheckEnd(line)) {
 			if title == "" {
 				title = unknownTitle
 			}
@@ -106,6 +138,14 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 			title = line
 			content.Reset()
 			continue
+		}
+		if line == "（全书完）" {
+			contentList = append(contentList, models.Chapter{
+				Title:   title,
+				Content: content.String(),
+			})
+			content.Reset()
+			break
 		}
 		ef.GenLine2Buffer(line, content)
 	}
@@ -120,6 +160,10 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 		})
 	}
 	book.Chapters = contentList
+	err := ef.InitBook()
+	if err != nil {
+		return err
+	}
 	var volPath string
 	for i := range book.Chapters {
 		volPath, err = ef.GenBookContent(i, volPath)
@@ -133,10 +177,19 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 	return nil
 }
 
-func sectionCount(sections []models.Chapter) int {
-	var count int
-	for _, section := range sections {
-		count += 1 + len(section.Sections)
+// checkComment 判断是否为备注,形如: =======  ////// ***** -----
+func checkComment(content string) bool {
+	if strings.ReplaceAll(content, "=", "") == "" {
+		return true
 	}
-	return count
+	if strings.ReplaceAll(content, "*", "") == "" {
+		return true
+	}
+	if strings.ReplaceAll(content, "-", "") == "" {
+		return true
+	}
+	if strings.ReplaceAll(content, "/", "") == "" {
+		return true
+	}
+	return false
 }

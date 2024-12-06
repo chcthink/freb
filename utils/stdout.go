@@ -40,3 +40,8 @@ func Warnf(str string, a ...interface{}) {
 	outB.Add(color.FgYellow)
 	_, _ = outB.Printf(str+newLine, a...)
 }
+
+func SysInfof(str string, a ...interface{}) {
+	outB.Add(color.FgBlue)
+	_, _ = outB.Printf(str+newLine, a...)
+}

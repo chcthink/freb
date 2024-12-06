@@ -1,11 +1,19 @@
-git :
-	git add . && git cz && git push origin
-
 BINARY=freb
+VERSION ?= $(shell git describe --tags --abbrev=0)
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
+
+git:
+	git add . && git cz && git push origin
+
+tag:
+	git add . && git cz && git tag $(VERSION) && git push origin $(VERSION)
+
+tag-build:
+	$(MAKE) tag && $(MAKE) build-all
+
 build:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -v -trimpath -ldflags="-s -w" -o $(BINARY)-$(GOOS)-$(GOARCH)
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -v -trimpath -ldflags="-s -w -X '$(BINARY)/cmd.version=$(VERSION)'" -o $(BINARY)-$(GOOS)-$(GOARCH)
 
 build-macos:
 	$(MAKE) build GOOS=darwin GOARCH=arm64

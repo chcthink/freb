@@ -11,8 +11,13 @@
  - 删除多余字符
 
 #### 预览
-![内容介绍](docs/assets/img/git-intro.png "内容介绍")![卷](docs/assets/img/git-vol.png "卷")![章节](docs/assets/img/git-chapter.png "章节")
 
+[//]: # (![内容介绍]&#40;docs/assets/img/git-intro.png "内容介绍"&#41;![卷]&#40;docs/assets/img/git-vol.png "卷"&#41;![章节]&#40;docs/assets/img/git-chapter.png "章节"&#41;)
+<p align="center">
+  <img src="docs/assets/img/git-intro.png" width="auto" height="285" />
+  <img src="docs/assets/img/git-vol.png" width="auto" height="285"  />
+  <img src="docs/assets/img/git-chapter.png" width="auto"  height="285" />
+</p>
 #### How to use
 
 ##### (一) 爬取小说并转化为 EPub

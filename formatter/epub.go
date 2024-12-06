@@ -157,9 +157,9 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 	if index+1 == len(e.Chapters) {
 		fmt.Println()
 	}
-	if volNum, vol, isVol := utils.VolByDefaultReg(title); isVol {
-		volPath, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.volImage, volNum, vol),
-			volNum+" "+vol, volNum+" "+vol+".xhtml", e.InnerURL.css)
+	if volNum, volTitle, isVol := utils.VolByDefaultReg(title); isVol {
+		volPath, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.volImage, volNum, volTitle),
+			volNum+" "+volTitle, volNum+" "+volTitle+".xhtml", e.InnerURL.css)
 		if err != nil {
 			utils.Err(err)
 			return
@@ -184,6 +184,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 			utils.Err(err)
 			return
 		}
+		volPath = vol
 	}
 
 	return

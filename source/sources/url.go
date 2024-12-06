@@ -113,7 +113,7 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 			}
 			if n.Type == html.TextNode {
 				raw := strings.TrimSpace(n.Data)
-				if raw == "" {
+				if raw == "" || len(raw) == 1 {
 					return
 				}
 				// filter title in content

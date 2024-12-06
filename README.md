@@ -10,6 +10,9 @@
  - 支持Apple books(ibooks)自定义字体
  - 删除多余字符
 
+#### 预览
+![内容介绍](docs/assets/img/git-intro.png "内容介绍")![卷](docs/assets/img/git-vol.png "卷")![章节](docs/assets/img/git-chapter.png "章节")
+
 #### How to use
 
 ##### (一) 爬取小说并转化为 EPub
@@ -38,7 +41,8 @@
  - 可以通过修改 `assets`目录和 `config.toml` 文件来自定义 EPub
  - txt 读取整合 [kaf-cli](https://github.com/ystyle/kaf-cli)
  - 排版样式参考使用“阡陌居-笙歌夜夜”
- - 起点封面 https://bookcover.yuewen.com/qdbimg/[作者id]/[小说id]/[140|600]
+ - 图片来源 pixabay 作者: BiancaVanDijk
+ - 字体采用 [975 Maru](https://github.com/lxgw/975maru)
 
 #### 已知问题
  - 封面下载 403,建议自行下载图片至本地 -c 指定封面

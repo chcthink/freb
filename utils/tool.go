@@ -1,13 +1,13 @@
 package utils
 
 import (
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 var (
-	bookSupports  = []string{".txt", ".epub"}
 	imageSupports = []string{".jpg", ".jpeg", ".png", ".svg", ".webp"}
 )
 
@@ -33,13 +33,73 @@ func IsFileExist(path string) bool {
 	return true
 }
 
-func ReplaceTitle(str, title string) (ret string) {
-	ret = strings.ReplaceAll(str, title, "")
-	return strings.ReplaceAll(ret, strings.ReplaceAll(title, " ", ""), "")
-}
-
 func PureEscapeHtml(str string) string {
 	str = strings.ReplaceAll(str, "<", "&lt;")
 	str = strings.ReplaceAll(str, ">", "&gt;")
 	return strings.ReplaceAll(str, "&", "&amp;")
+}
+
+const (
+	defaultImgDir = "assets/images/"
+)
+
+func SetImage(from, dir, filename string, handler func() *http.Request) (path string, err error) {
+	if IsImgFile(from) {
+		if IsFileExist(from) {
+			path = from
+			return
+		}
+	}
+	if CheckUrl(from) {
+		path, err = DownloadTmp(dir, filename, func() *http.Request {
+			return NewGet(from)
+		})
+		if path != "" {
+			return
+		}
+	}
+	if handler != nil {
+		path, err = DownloadTmp(dir, filename, handler)
+		if path != "" {
+			return
+		}
+	}
+	defaultImage := defaultImgDir + filename
+	if IsImgFile(defaultImage) {
+		if IsFileExist(defaultImage) {
+			path = defaultImage
+			return
+		}
+	}
+
+	path, err = DownloadTmp(dir, filename, func() *http.Request {
+		return NewGet(githubRaw + defaultImgDir + filename)
+	})
+
+	return
+}
+
+const (
+	bookNameMarkPre = '《'
+	bookNameMarkSuf = '》'
+	hyphen          = '-'
+)
+
+func GetBookInfo(str string) (name, author string) {
+	if strings.ContainsRune(str, bookNameMarkPre) && strings.ContainsRune(str, bookNameMarkSuf) {
+		start := strings.IndexRune(str, bookNameMarkPre)
+		end := strings.IndexRune(str, bookNameMarkSuf)
+		if start >= end {
+			return
+		}
+		name = strings.Replace(str[start:end], string(bookNameMarkPre), "", 1)
+	}
+	if index := AuthorIndex(str); index > 0 {
+		author = str[index:]
+	}
+	if strings.ContainsRune(str, hyphen) {
+		name = str[:strings.IndexRune(str, hyphen)]
+		author = str[strings.IndexRune(str, hyphen):]
+	}
+	return
 }

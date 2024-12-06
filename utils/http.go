@@ -55,6 +55,10 @@ func GetDom(url string) (doc *goquery.Document, err error) {
 func DownloadTmp(dir, filename string, handler func() *http.Request) (path string, err error) {
 	if handler != nil {
 		req := handler()
+		if req == nil {
+			return
+		}
+		filename = strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
 		paths := strings.Split(req.URL.Path, "/")
 		name := paths[len(paths)-1]
 		var resp *http.Response

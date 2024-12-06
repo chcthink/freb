@@ -12,9 +12,9 @@
 
 #### 预览
 <p align="center">
-  <img src="docs/assets/img/git-intro.png" width="auto" height="285" />
-  <img src="docs/assets/img/git-vol.png" width="auto" height="285"  />
-  <img src="docs/assets/img/git-chapter.png" width="auto"  height="285" />
+  <img src="docs/assets/img/git-intro.png" width="30%" height="auto" />
+  <img src="docs/assets/img/git-vol.png" width="30%" height="auto"  />
+  <img src="docs/assets/img/git-chapter.png" width="30%"  height="auto" />
 </p>
 #### How to use
 

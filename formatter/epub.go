@@ -171,7 +171,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 	num, name, subNum := utils.ChapterTitleByDefaultReg(title)
 	if vol == "" {
 		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Chapter+e.Book.Chapters[index].Content,
-			e.contentLogo, num, name, subNum), num+" "+name,
+			e.contentLogo, num, name, subNum), strings.Join([]string{num, name, subNum}, " "),
 			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.Inner.css)
 		if err != nil {
 			utils.Err(err)
@@ -179,7 +179,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 		}
 	} else {
 		_, err = e.AddSubSection(vol, fmt.Sprintf(config.Cfg.Chapter+e.Book.Chapters[index].Content,
-			e.contentLogo, num, name, subNum), num+" "+name,
+			e.contentLogo, num, name, subNum), strings.Join([]string{num, name, subNum}, " "),
 			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.Inner.css)
 		if err != nil {
 			utils.Err(err)

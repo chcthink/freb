@@ -36,7 +36,7 @@
 ```shell
 # -p 指定路径 -a 指定作者 -c 指定封面路径 默认为当前目录下的cover.png
 # -o 输出路径
-./freb -p xxx.txt -a xxx -c cover.png -o xxx.epub
+./freb -p xxx.txt -a xxx -c cover.jpg -o xxx.epub
 ```
 
 #### Tips
@@ -46,6 +46,3 @@
  - 排版样式参考使用“阡陌居-笙歌夜夜”
  - 图片来源 pixabay 作者: BiancaVanDijk
  - 字体采用 [975 Maru](https://github.com/lxgw/975maru)
-
-#### 已知问题
- - 封面下载 403,建议自行下载图片至本地 -c 指定封面

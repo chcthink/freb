@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"freb/utils"
+	"freb/utils/stdout"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +18,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "版本",
 	Run: func(cmd *cobra.Command, args []string) {
-		utils.SysInfof("version: %s", version)
+		stdout.SysInfof("version: %s", version)
 	},
 }

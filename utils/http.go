@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"freb/utils/stdout"
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -36,7 +37,7 @@ func NewGet(url string) (req *http.Request) {
 // GetDom 获取 HTML DOM
 func GetDom(url string) (doc *goquery.Document, err error) {
 	if !CheckUrl(url) {
-		return nil, errors.New(ErrUrl)
+		return nil, errors.New(stdout.ErrUrl)
 	}
 	req := NewGet(url)
 	resp, err := http.DefaultClient.Do(req)
@@ -113,7 +114,7 @@ func CoverUrl(isOld bool, id string) string {
 	if isOld {
 		bookId, _ := strconv.Atoi(id)
 		mid := strconv.FormatFloat(math.Floor(float64(bookId)/1000.0), 'f', 0, 64)
-		return strings.Join([]string{domain, "fengmian", mid, id, id + "s.jpg"}, "/")
+		return strings.Join([]string{oldDomain, "fengmian", mid, id, id + "s.jpg"}, "/")
 	}
 	return fmt.Sprintf(coverUrl, id)
 }
@@ -131,6 +132,7 @@ func LocalOrUrl(path string) string {
 
 func LocalOrDownload(path, tmpDir string) (source string, err error) {
 	if !IsFileExist(path) {
+		stdout.Fmt("正在从远程下载配置文件...")
 		source, err = DownloadTmp(tmpDir, path, func() *http.Request {
 			return NewGet(githubRaw + path)
 		})

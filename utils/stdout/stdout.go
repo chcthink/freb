@@ -1,4 +1,4 @@
-package utils
+package stdout
 
 import (
 	"github.com/fatih/color"

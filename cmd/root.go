@@ -8,6 +8,7 @@ import (
 	"freb/source"
 	"freb/source/sources"
 	"freb/utils"
+	"freb/utils/stdout"
 	"github.com/spf13/cobra"
 	"net/http"
 	"os"
@@ -64,7 +65,7 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := BookParamCheck()
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 		if cmd.PersistentFlags().Changed(descCmd) {
@@ -85,7 +86,7 @@ var rootCmd = &cobra.Command{
 		}
 		err = source.GetBook(&novel)
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 	},
@@ -93,7 +94,7 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		utils.Err(err)
+		stdout.Err(err)
 		os.Exit(1)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"freb/formatter"
 	"freb/models"
 	"freb/utils"
+	"freb/utils/stdout"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/adrg/strutil"
 	"github.com/adrg/strutil/metrics"
@@ -51,7 +52,7 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	}
 
 	// chapter
-	utils.Fmt("正在获取目录信息...")
+	stdout.Fmt("正在获取目录信息...")
 	doc, err = utils.GetDom(toc)
 	if err != nil {
 		return err
@@ -78,7 +79,7 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	if len(book.Chapters) == 0 {
 		return errors.New("爬取错误: 章节数为 0")
 	}
-	utils.Fmtf("章节数: %d", len(book.Chapters))
+	stdout.Fmtf("章节数: %d", len(book.Chapters))
 	// confirm format
 	var ef formatter.EpubFormat
 	ef.Book = book
@@ -87,7 +88,7 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		return err
 	}
 	// contents
-	utils.Fmt("正在添加章节...")
+	stdout.Fmt("正在添加章节...")
 	var volPath string
 	for i, chapter := range book.Chapters {
 		if chapter.Url == "" {
@@ -147,6 +148,6 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 
 	_ = os.RemoveAll(config.Cfg.TmpDir)
 	totalTime := time.Since(start).Truncate(time.Second).String()
-	utils.Successf("\n已生成书籍,使用时长: %s", totalTime)
+	stdout.Successf("\n已生成书籍,使用时长: %s", totalTime)
 	return
 }

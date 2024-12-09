@@ -7,6 +7,7 @@ import (
 	"freb/formatter"
 	"freb/models"
 	"freb/utils"
+	"freb/utils/stdout"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -29,7 +30,7 @@ func getBuffer(filename string) *bufio.Reader {
 	f, err := os.Open(filename)
 	defer f.Close()
 	if err != nil {
-		fmt.Println("读取文件出错: ", err.Error())
+		stdout.Errf("读取文件出错: %s", err.Error())
 		os.Exit(1)
 	}
 	temBuf := bufio.NewReader(f)
@@ -39,7 +40,7 @@ func getBuffer(filename string) *bufio.Reader {
 		f.Seek(0, 0)
 		bs, err := io.ReadAll(f)
 		if err != nil {
-			fmt.Println("读取文件出错: ", err.Error())
+			stdout.Errf("读取文件出错: %s", err.Error())
 			os.Exit(1)
 		}
 		var buf bytes.Buffer
@@ -62,7 +63,7 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 	var ef formatter.EpubFormat
 	ef.Book = book
 
-	fmt.Println("正在读取txt文件...")
+	stdout.Fmt("正在读取txt文件...")
 	start := time.Now()
 	buf := getBuffer(book.Path)
 	var title string
@@ -83,7 +84,7 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 				content.Reset()
 				break
 			}
-			return fmt.Errorf("读取文件出错: %w", err)
+			return fmt.Errorf("读取文件出错: %s", err)
 		}
 		line = strings.TrimSpace(line)
 		// 空行直接跳过
@@ -173,7 +174,7 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 		return err
 	}
 	end := time.Now().Sub(start)
-	fmt.Println("\n已生成书籍,使用时长: ", end)
+	stdout.Successf("\n已生成书籍,使用时长: %s", end)
 	return nil
 }
 

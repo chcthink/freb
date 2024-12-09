@@ -60,9 +60,7 @@ func SetImage(from, dir, filename string, handler func() *http.Request) (path st
 	}
 	if handler != nil {
 		path, err = DownloadTmp(dir, filename, handler)
-		if path != "" {
-			return
-		}
+		return
 	}
 	defaultImage := defaultImgDir + filename
 	if IsImgFile(defaultImage) {
@@ -75,7 +73,6 @@ func SetImage(from, dir, filename string, handler func() *http.Request) (path st
 	path, err = DownloadTmp(dir, filename, func() *http.Request {
 		return NewGet(githubRaw + defaultImgDir + filename)
 	})
-
 	return
 }
 

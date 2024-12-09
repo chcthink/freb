@@ -6,6 +6,7 @@ import (
 	"freb/config"
 	"freb/models"
 	"freb/utils"
+	"freb/utils/stdout"
 	"github.com/go-shiori/go-epub"
 	"path"
 	"strconv"
@@ -38,27 +39,27 @@ func (e *EpubFormat) InitBook() (err error) {
 	e.Epub, err = epub.NewEpub(e.Book.Name)
 	e.Inner = &Inner{}
 	if err != nil {
-		utils.Err(err)
+		stdout.Err(err)
 		return
 	}
 
 	// 初始化书籍信息
-	utils.Fmtf("初始化书籍信息:%s", e.Name)
+	stdout.Fmtf("初始化书籍信息:%s", e.Name)
 	// 添加 css
 	e.Inner.css, err = e.AddCSS(utils.LocalOrUrl("assets/styles/main.css"), "main.css")
 	if err != nil {
-		utils.Err(err)
+		stdout.Err(err)
 		return
 	}
 	e.AddFont(utils.LocalOrUrl("assets/fonts/font.ttf"), "font.ttf")
 	_, err = e.AddCSS(utils.LocalOrUrl("assets/styles/fonts.css"), "fonts.css")
 	if err != nil {
-		utils.Err(err)
+		stdout.Err(err)
 		return
 	}
 	err = e.AddMetaINF(utils.LocalOrUrl("assets/META-INF/com.apple.ibooks.display-options.xml"))
 	if err != nil {
-		utils.Err(err)
+		stdout.Err(err)
 		return
 	}
 	e.SetLang(e.Book.Lang)
@@ -75,12 +76,12 @@ func (e *EpubFormat) InitBook() (err error) {
 		}
 		coverCss, err = e.AddCSS(utils.LocalOrUrl("assets/styles/cover.css"), "cover.css")
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 		err = e.SetCover(image, coverCss)
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 	}
@@ -88,23 +89,23 @@ func (e *EpubFormat) InitBook() (err error) {
 	e.SetAuthor(e.Book.Author)
 	// 添加制作说明
 	if e.Book.Desc {
-		utils.Fmt("正在添加制作说明...")
+		stdout.Fmt("正在添加制作说明...")
 		var insPageCss string
 		insPageCss, err = e.AddCSS(utils.LocalOrUrl("assets/styles/instruction.css"), "instruction.css")
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Instruction.Dom, e.Book.Name, e.Book.Author),
 			config.Cfg.Instruction.Title, "instruction.xhtml", insPageCss)
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 	}
 	// 内容简介
 	if e.Book.Intro != "" {
-		utils.Fmt("正在添加内容简介...")
+		stdout.Fmt("正在添加内容简介...")
 		var logo string
 		logo, err = e.AddImage(e.IntroImg, path.Base(e.IntroImg))
 		if err != nil {
@@ -118,14 +119,14 @@ func (e *EpubFormat) InitBook() (err error) {
 	if e.Book.Vol != "" {
 		e.volImage, err = e.AddImage(e.Vol, path.Base(e.Vol))
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 	}
 	if e.Book.ContentImg != "" {
 		e.contentLogo, err = e.AddImage(e.Book.ContentImg, path.Base(e.ContentImg))
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 	}
@@ -162,7 +163,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 		volPath, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.volImage, volNum, volTitle),
 			volNum+" "+volTitle, volFilePrefix+strconv.Itoa(e.volIndex)+".xhtml", e.Inner.css)
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 		return
@@ -174,7 +175,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 			e.contentLogo, num, name, subNum), strings.Join([]string{num, name, subNum}, " "),
 			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.Inner.css)
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 	} else {
@@ -182,7 +183,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 			e.contentLogo, num, name, subNum), strings.Join([]string{num, name, subNum}, " "),
 			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.Inner.css)
 		if err != nil {
-			utils.Err(err)
+			stdout.Err(err)
 			return
 		}
 		volPath = vol

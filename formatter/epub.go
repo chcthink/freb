@@ -22,6 +22,15 @@ const (
 	percentSign       = "%"
 )
 
+type AssetsPath struct {
+	CommonCss      string
+	CoverCss       string
+	FontCss        string
+	InstructionCss string
+	Font           string
+	MetaInf        string
+}
+
 type Inner struct {
 	volImage    string
 	contentLogo string
@@ -33,6 +42,7 @@ type EpubFormat struct {
 	*epub.Epub
 	*models.Book
 	*Inner
+	*AssetsPath
 }
 
 func (e *EpubFormat) InitBook() (err error) {
@@ -46,18 +56,18 @@ func (e *EpubFormat) InitBook() (err error) {
 	// 初始化书籍信息
 	stdout.Fmtf("初始化书籍信息:%s", e.Name)
 	// 添加 css
-	e.Inner.css, err = e.AddCSS(utils.LocalOrUrl("assets/styles/main.css"), "main.css")
+	e.Inner.css, err = e.AddCSS(e.AssetsPath.CommonCss, "main.css")
 	if err != nil {
 		stdout.Err(err)
 		return
 	}
-	e.AddFont(utils.LocalOrUrl("assets/fonts/font.ttf"), "font.ttf")
-	_, err = e.AddCSS(utils.LocalOrUrl("assets/styles/fonts.css"), "fonts.css")
+	_, _ = e.AddFont(e.AssetsPath.Font, "font.ttf")
+	_, err = e.AddCSS(e.AssetsPath.FontCss, "fonts.css")
 	if err != nil {
 		stdout.Err(err)
 		return
 	}
-	err = e.AddMetaINF(utils.LocalOrUrl("assets/META-INF/com.apple.ibooks.display-options.xml"))
+	err = e.AddMetaINF(e.MetaInf)
 	if err != nil {
 		stdout.Err(err)
 		return
@@ -74,7 +84,7 @@ func (e *EpubFormat) InitBook() (err error) {
 			err = fmt.Errorf("添加封面失败 %w", err)
 			return
 		}
-		coverCss, err = e.AddCSS(utils.LocalOrUrl("assets/styles/cover.css"), "cover.css")
+		coverCss, err = e.AddCSS(e.CoverCss, "cover.css")
 		if err != nil {
 			stdout.Err(err)
 			return
@@ -88,10 +98,10 @@ func (e *EpubFormat) InitBook() (err error) {
 	// 添加作者
 	e.SetAuthor(e.Book.Author)
 	// 添加制作说明
-	if e.Book.Desc {
+	if e.Book.IsDesc {
 		stdout.Fmt("正在添加制作说明...")
 		var insPageCss string
-		insPageCss, err = e.AddCSS(utils.LocalOrUrl("assets/styles/instruction.css"), "instruction.css")
+		insPageCss, err = e.AddCSS(e.InstructionCss, "instruction.css")
 		if err != nil {
 			stdout.Err(err)
 			return

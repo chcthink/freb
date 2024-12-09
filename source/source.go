@@ -1,7 +1,9 @@
 package source
 
-import "freb/models"
+import (
+	"freb/formatter"
+)
 
 type Source interface {
-	GetBook(*models.Book) error
+	GetBook(formatter.EpubFormat) error
 }

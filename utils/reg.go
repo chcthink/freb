@@ -106,7 +106,7 @@ const (
 	numReg = "[0-9]+"
 )
 
-func CheckNum(str string) bool {
+func CheckDomain(str string) bool {
 	reg := regexp.MustCompilePOSIX(numReg)
 	return reg.MatchString(str)
 }

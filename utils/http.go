@@ -123,23 +123,17 @@ const (
 	githubRaw = "https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/"
 )
 
-func LocalOrUrl(path string) string {
-	if !IsFileExist(path) {
-		return githubRaw + path
-	}
-	return path
-}
-
 func LocalOrDownload(path, tmpDir string) (source string, err error) {
-	if !IsFileExist(path) {
-		stdout.Fmt("正在从远程下载配置文件...")
+	if filePath, isExist := IsFileInExecDir(path); !isExist {
+		downloadUrl := githubRaw + path
+		stdout.Fmtf("正在从远程仓库下载文件: %s", downloadUrl)
 		source, err = DownloadTmp(tmpDir, path, func() *http.Request {
-			return NewGet(githubRaw + path)
+			return NewGet(downloadUrl)
 		})
 		return
+	} else {
+		return filePath, err
 	}
-
-	return path, err
 }
 
 func EmptyOrDomain(isOld bool) string {

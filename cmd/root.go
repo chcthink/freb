@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"freb/config"
+	"freb/formatter"
 	"freb/models"
 	"freb/source"
 	"freb/source/sources"
@@ -43,7 +44,7 @@ const (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&novel.Format, formatCmd, "f", "epub", "转换至指定格式 默认 epub")
+	// rootCmd.PersistentFlags().StringVarP(&novel.Format, formatCmd, "f", "epub", "转换至指定格式 默认 epub")
 	rootCmd.PersistentFlags().StringVarP(&novel.Id, idCmd, "i", "", "下载书本id")
 	rootCmd.PersistentFlags().StringVarP(&novel.Cover, coverCmd, "c", coverDefault, "封面路径")
 	rootCmd.PersistentFlags().StringVarP(&novel.Out, outCmd, "o", "", "输出文件名")
@@ -51,7 +52,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&novel.IntroImg, descImgCmd, "e", introImgDefault, "内容介绍logo")
 	rootCmd.PersistentFlags().StringVarP(&novel.Vol, volCmd, "b", volDefault, "卷logo")
 	rootCmd.PersistentFlags().StringVarP(&novel.Author, authorCmd, "a", "Unknown", "作者")
-	rootCmd.PersistentFlags().BoolVarP(&novel.Desc, descCmd, "d", true, "是否包含制作说明,默认包含,使用 -d 来取消包含")
+	rootCmd.PersistentFlags().BoolVarP(&novel.IsDesc, descCmd, "d", true, "是否包含制作说明,默认包含,使用 -d 来取消包含")
 	rootCmd.PersistentFlags().StringVarP(&novel.Lang, langCmd, "l", "zh-Hans", "默认中文zh-Hans,英文 en")
 	rootCmd.PersistentFlags().StringVarP(&novel.Path, pathCmd, "p", "", "转化txt路径")
 	// rootCmd.PersistentFlags().StringVarP(&novel.Font, fontCmd, "w", "", "正文字体字体")
@@ -61,30 +62,37 @@ var novel models.Book
 
 var rootCmd = &cobra.Command{
 	Use:   "freb",
-	Short: "freb用于下载小说并转换至指定格式",
+	Short: "freb用于下载小说并转换至EPub",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := BookParamCheck()
+		path := novel.Path
+		if len(args) > 0 {
+			path = args[0]
+		}
+		err := CheckFlag(cmd, path)
 		if err != nil {
 			stdout.Err(err)
 			return
 		}
-		if cmd.PersistentFlags().Changed(descCmd) {
-			novel.Desc = false
-		}
 		var source source.Source
 		if len(novel.Id) > 0 {
 			source = &sources.UrlSource{}
-		}
-		path := novel.Path
-		if len(args) > 0 {
-			path = args[0]
 		}
 		if len(path) > 0 {
 			source = &sources.TxtSource{}
 			novel.Name = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 			novel.Name, novel.Author = utils.GetBookInfo(novel.Name)
 		}
-		err = source.GetBook(&novel)
+
+		var ef formatter.EpubFormat
+		ef.Book = &novel
+		ef.AssetsPath = &formatter.AssetsPath{}
+		err = InitAssets(ef)
+		if err != nil {
+			stdout.Err(err)
+			return
+		}
+
+		err = source.GetBook(ef)
 		if err != nil {
 			stdout.Err(err)
 			return
@@ -99,21 +107,27 @@ func Execute() {
 	}
 }
 
-func BookParamCheck() (err error) {
-	if len(novel.Path) == 0 && len(novel.Id) == 0 {
+func CheckFlag(cmd *cobra.Command, cmdPath string) (err error) {
+	if cmd.PersistentFlags().Changed(descCmd) {
+		novel.IsDesc = false
+	}
+	if len(cmdPath) == 0 && len(novel.Id) == 0 {
 		return errors.New(sourceErr)
 	}
-	if len(novel.Path) > 0 {
-		if !utils.IsFileExist(novel.Path) {
-			return errors.New(fmt.Sprintf(sourceErr, novel.Path))
+	if len(cmdPath) > 0 {
+		if !utils.IsFileInWorkDir(cmdPath) {
+			return errors.New(fmt.Sprintf(sourceErr, cmdPath))
 		}
 	}
 
 	if len(novel.Id) > 0 {
-		novel.IsOld = utils.CheckNum(novel.Id)
+		novel.IsOld = utils.CheckDomain(novel.Id)
 	}
+	return
+}
 
-	// cover subCover vol
+func InitAssets(ef formatter.EpubFormat) (err error) {
+	// image
 	novel.Cover, err = utils.SetImage(novel.Cover, config.Cfg.TmpDir, coverDefault, func() *http.Request {
 		var req *http.Request
 		if len(novel.Id) > 0 {
@@ -124,19 +138,46 @@ func BookParamCheck() (err error) {
 		return nil
 	})
 	if err != nil {
-		return err
+		return
 	}
 	novel.IntroImg, err = utils.SetImage(novel.IntroImg, config.Cfg.TmpDir, introImgDefault, nil)
 	if err != nil {
-		return err
+		return
 	}
 	novel.ContentImg, err = utils.SetImage(novel.ContentImg, config.Cfg.TmpDir, contentImgDefault, nil)
 	if err != nil {
-		return err
+		return
 	}
 	novel.Vol, err = utils.SetImage(novel.Vol, config.Cfg.TmpDir, volDefault, nil)
 	if err != nil {
-		return err
+		return
 	}
-	return nil
+	// font
+	ef.AssetsPath.Font, err = utils.LocalOrDownload("assets/fonts/font.ttf", config.Cfg.TmpDir)
+	if err != nil {
+		return
+	}
+	// MetaINF
+	ef.AssetsPath.MetaInf, err = utils.LocalOrDownload("assets/META-INF/com.apple.ibooks.display-options.xml", config.Cfg.TmpDir)
+	if err != nil {
+		return
+	}
+	// css
+	ef.AssetsPath.CommonCss, err = utils.LocalOrDownload("assets/styles/main.css", config.Cfg.TmpDir)
+	if err != nil {
+		return
+	}
+	ef.AssetsPath.FontCss, err = utils.LocalOrDownload("assets/styles/fonts.css", config.Cfg.TmpDir)
+	if err != nil {
+		return
+	}
+	ef.AssetsPath.CoverCss, err = utils.LocalOrDownload("assets/styles/cover.css", config.Cfg.TmpDir)
+	if err != nil {
+		return
+	}
+	ef.AssetsPath.InstructionCss, err = utils.LocalOrDownload("assets/styles/instruction.css", config.Cfg.TmpDir)
+	if err != nil {
+		return
+	}
+	return
 }

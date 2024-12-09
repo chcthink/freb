@@ -20,21 +20,21 @@ import (
 type UrlSource struct {
 }
 
-func (u *UrlSource) GetBook(book *models.Book) (err error) {
+func (u *UrlSource) GetBook(ef formatter.EpubFormat) (err error) {
 	start := time.Now()
-	doc, err := utils.GetDom(utils.TocUrl(book.IsOld, book.Id))
+	doc, err := utils.GetDom(utils.TocUrl(ef.Book.IsOld, ef.Book.Id))
 	if err != nil {
 		return err
 	}
-	book.Name = doc.Find("div.booknav2 h1 a").Text()
+	ef.Book.Name = doc.Find("div.booknav2 h1 a").Text()
 
-	if book.Author == "Unknown" {
-		book.Author = doc.Find("div.booknav2 p a[href*='author']").Text()
+	if ef.Book.Author == "Unknown" {
+		ef.Book.Author = doc.Find("div.booknav2 p a[href*='author']").Text()
 	}
 
 	var toc, tocSlt, titleSlt, contentSlt string
-	if !book.IsOld {
-		book.Intro = doc.Find("div.navtxt p:first-child").Text()
+	if !ef.Book.IsOld {
+		ef.Book.Intro = doc.Find("div.navtxt p:first-child").Text()
 
 		toc, _ = doc.Find("a.btn:first-child").Attr("href")
 		toc = utils.Domain() + toc
@@ -43,7 +43,7 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		contentSlt = "div.content"
 		tocSlt = "div#chapters ul li"
 	} else {
-		book.Intro = doc.Find("div.content").Text()
+		ef.Book.Intro = doc.Find("div.content").Text()
 		toc, _ = doc.Find("a.more-btn").Attr("href")
 
 		titleSlt = "div.txtnav h1"
@@ -71,18 +71,15 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 			index = total - 1 - i
 		}
 		if i == 0 {
-			book.Chapters = make([]models.Chapter, total)
+			ef.Book.Chapters = make([]models.Chapter, total)
 		}
-		book.Chapters[index].Url, _ = s.Find("a").Attr("href")
-		book.Chapters[index].Url = utils.EmptyOrDomain(book.IsOld) + book.Chapters[index].Url
+		ef.Book.Chapters[index].Url, _ = s.Find("a").Attr("href")
+		ef.Book.Chapters[index].Url = utils.EmptyOrDomain(ef.Book.IsOld) + ef.Book.Chapters[index].Url
 	})
-	if len(book.Chapters) == 0 {
+	if len(ef.Book.Chapters) == 0 {
 		return errors.New("爬取错误: 章节数为 0")
 	}
-	stdout.Fmtf("章节数: %d", len(book.Chapters))
-	// confirm format
-	var ef formatter.EpubFormat
-	ef.Book = book
+	stdout.Fmtf("章节数: %d", len(ef.Book.Chapters))
 	err = ef.InitBook()
 	if err != nil {
 		return err
@@ -90,7 +87,7 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 	// contents
 	stdout.Fmt("正在添加章节...")
 	var volPath string
-	for i, chapter := range book.Chapters {
+	for i, chapter := range ef.Book.Chapters {
 		if chapter.Url == "" {
 			continue
 		}
@@ -100,11 +97,11 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 		}
 
 		node := doc.Find(contentSlt).Contents()
-		book.Chapters[i].Title = strings.TrimSpace(doc.Find(titleSlt).Text())
-		if book.Chapters[i].Title == "" {
+		ef.Book.Chapters[i].Title = strings.TrimSpace(doc.Find(titleSlt).Text())
+		if ef.Book.Chapters[i].Title == "" {
 			return errors.New("当前章节爬取错误")
 		}
-		book.Chapters[i].Title = utils.PureTitle(book.Chapters[i].Title)
+		ef.Book.Chapters[i].Title = utils.PureTitle(ef.Book.Chapters[i].Title)
 
 		contentLen := len(node.Nodes)
 		var f func(int, *html.Node)
@@ -118,13 +115,13 @@ func (u *UrlSource) GetBook(book *models.Book) (err error) {
 					return
 				}
 				// filter title in content
-				if strutil.Similarity(raw, book.Chapters[i].Title, metrics.NewJaro()) > 0.75 && index <= contentLen/3 {
+				if strutil.Similarity(raw, ef.Book.Chapters[i].Title, metrics.NewJaro()) > 0.75 && index <= contentLen/3 {
 					return
 				}
 				if strings.Contains(raw, "本章完") {
 					return
 				}
-				book.Chapters[i].Content += ef.GenLine(raw)
+				ef.Book.Chapters[i].Content += ef.GenLine(raw)
 			}
 			if n.FirstChild != nil {
 				for c := n.FirstChild; c != nil; c = c.NextSibling {

@@ -25,12 +25,23 @@ func IsImgFile(filename string) bool {
 	return CheckFileType(filename, imageSupports)
 }
 
-func IsFileExist(path string) bool {
+func IsFileInWorkDir(path string) bool {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		return false
 	}
 	return true
+}
+
+func IsFileInExecDir(path string) (filePath string, isExist bool) {
+	execPath, _ := os.Executable()
+	execDir := filepath.Dir(execPath)
+	filePath = filepath.Join(execDir, path)
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return
+	}
+	return filePath, true
 }
 
 func PureEscapeHtml(str string) string {
@@ -45,7 +56,7 @@ const (
 
 func SetImage(from, dir, filename string, handler func() *http.Request) (path string, err error) {
 	if IsImgFile(from) {
-		if IsFileExist(from) {
+		if IsFileInWorkDir(from) {
 			path = from
 			return
 		}
@@ -62,12 +73,9 @@ func SetImage(from, dir, filename string, handler func() *http.Request) (path st
 		path, err = DownloadTmp(dir, filename, handler)
 		return
 	}
-	defaultImage := defaultImgDir + filename
-	if IsImgFile(defaultImage) {
-		if IsFileExist(defaultImage) {
-			path = defaultImage
-			return
-		}
+	if filePath, isExist := IsFileInExecDir(defaultImgDir + filename); isExist {
+		path = filePath
+		return
 	}
 
 	path, err = DownloadTmp(dir, filename, func() *http.Request {

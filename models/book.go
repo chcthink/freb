@@ -17,7 +17,7 @@ type Book struct {
 	Out        string
 	Lang       string
 	Path       string
-	Desc       bool
+	IsDesc     bool
 	IsOld      bool
 	// Font     string
 	Chapters []Chapter

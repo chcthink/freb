@@ -58,14 +58,12 @@ func getBuffer(filename string) *bufio.Reader {
 	}
 }
 
-func (t *TxtSource) GetBook(book *models.Book) error {
+func (t *TxtSource) GetBook(ef formatter.EpubFormat) error {
 	var contentList []models.Chapter
-	var ef formatter.EpubFormat
-	ef.Book = book
 
 	stdout.Fmt("正在读取txt文件...")
 	start := time.Now()
-	buf := getBuffer(book.Path)
+	buf := getBuffer(ef.Book.Path)
 	var title string
 	content := &bytes.Buffer{}
 	tmp := ""
@@ -160,13 +158,13 @@ func (t *TxtSource) GetBook(book *models.Book) error {
 			Content: content.String(),
 		})
 	}
-	book.Chapters = contentList
+	ef.Book.Chapters = contentList
 	err := ef.InitBook()
 	if err != nil {
 		return err
 	}
 	var volPath string
-	for i := range book.Chapters {
+	for i := range ef.Book.Chapters {
 		volPath, err = ef.GenBookContent(i, volPath)
 	}
 	err = ef.Build()

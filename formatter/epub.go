@@ -165,9 +165,6 @@ func (e *EpubFormat) GenLine2Buffer(str string, buf *bytes.Buffer) {
 func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err error) {
 	title := e.Book.Chapters[index].Title
 	fmt.Printf("\r[%d/%d]\033[K%s", index+1, len(e.Chapters), title)
-	if index+1 == len(e.Chapters) {
-		fmt.Println()
-	}
 	if volNum, volTitle, isVol := utils.VolByDefaultReg(title); isVol {
 		e.volIndex += 1
 		volPath, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.volImage, volNum, volTitle),

@@ -73,6 +73,7 @@ func (u *UrlSource) GetBook(ef formatter.EpubFormat) (err error) {
 		if i == 0 {
 			ef.Book.Chapters = make([]models.Chapter, total)
 		}
+		ef.Book.Chapters[index].Title = s.Find("a").Text()
 		ef.Book.Chapters[index].Url, _ = s.Find("a").Attr("href")
 		ef.Book.Chapters[index].Url = utils.EmptyOrDomain(ef.Book.IsOld) + ef.Book.Chapters[index].Url
 	})
@@ -97,8 +98,7 @@ func (u *UrlSource) GetBook(ef formatter.EpubFormat) (err error) {
 		}
 
 		node := doc.Find(contentSlt).Contents()
-		ef.Book.Chapters[i].Title = strings.TrimSpace(doc.Find(titleSlt).Text())
-		if ef.Book.Chapters[i].Title == "" {
+		if doc.Find(titleSlt).Text() == "" {
 			return errors.New("当前章节爬取错误")
 		}
 		ef.Book.Chapters[i].Title = utils.PureTitle(ef.Book.Chapters[i].Title)

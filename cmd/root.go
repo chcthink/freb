@@ -121,7 +121,7 @@ func CheckFlag(cmd *cobra.Command, cmdPath string) (err error) {
 	}
 
 	if len(novel.Id) > 0 {
-		novel.IsOld = utils.CheckDomain(novel.Id)
+		novel.IsOld = utils.CheckNum(novel.Id)
 	}
 	return
 }

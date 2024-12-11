@@ -25,7 +25,7 @@ func CheckUrl(url string) bool {
 
 const (
 	IntroReg         = "(文章|内容)简介([:：])?"
-	ChapterNumReg    = "第[0-9一二三四五六七八九十零〇百千两 ]+[章回节集卷部]|^[Ss]ection.{1,20}$|^[Cc]hapter.{1,20}$|^[Pp]age.{1,20}$|^引子$|^楔子$|^章节目录|^章节|^序章"
+	ChapterNumReg    = `第[0-9一二三四五六七八九十零〇百千两 ]+[章回节集卷部]|^[Ss]ection.{1,20}$|^[Cc]hapter.{1,20}$|^[Pp]age.{1,20}$|^引子$|^楔子$|^章节目录|^章节|^序章|^\d*`
 	ChapterSubNumReg = "[(（][0-9一二三四五六七八九十零〇百千两 ][)）]"
 	volReg           = "^第[0-9一二三四五六七八九十零〇百千两 ]+[卷部]"
 	authorReg        = "作者([:：])?"
@@ -51,13 +51,15 @@ func ChapterTitleByDefaultReg(str string) (num, title, subNum string) {
 }
 
 func PureTitle(str string) (title string) {
+	str = strings.TrimSpace(str)
 	numTitleReg := regexp.MustCompile(ChapterNumReg)
 	num := numTitleReg.FindString(str)
 	title = str
 	if num != "" {
-		return num + " " + strings.TrimSpace(strings.Split(title, num)[1])
+		subTitle := strings.TrimSpace(strings.Split(title, num)[1])
+		title = num + " " + subTitle
 	}
-	return str
+	return
 }
 
 func VolByDefaultReg(str string) (num, title string, isVol bool) {
@@ -106,7 +108,7 @@ const (
 	numReg = "[0-9]+"
 )
 
-func CheckDomain(str string) bool {
+func CheckNum(str string) bool {
 	reg := regexp.MustCompilePOSIX(numReg)
 	return reg.MatchString(str)
 }

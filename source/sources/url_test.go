@@ -37,4 +37,5 @@ func TestSimilarity(t *testing.T) {
 		fmt.Println(k, similar, since)
 	}
 	fmt.Printf("\nmin algo: %s,time: %s\n", algo, timeMin)
+
 }

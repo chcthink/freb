@@ -16,6 +16,7 @@
   <img src="docs/assets/img/git-vol.png" width="30%" height="auto"  />
   <img src="docs/assets/img/git-chapter.png" width="30%"  height="auto" />
 </p>
+
 #### How to use
 
 ##### (一) 爬取小说并转化为 EPub
@@ -26,6 +27,7 @@
 4. 自行定义 config.toml 配置,如 每章下载延时delay_time
 5. 在命令行输入以下命令下载小说
 
+> 当小说 id 为**数字**时,可以不用 -c 指定封面,工具会自动下载封面(若69书吧存在封面)
 ``` shell
 # ID 为 69 书吧小说的 ID
 ./freb -i abcdefg ID

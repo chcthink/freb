@@ -13,7 +13,7 @@ tag-build:
 	$(MAKE) tag && $(MAKE) build-all
 
 build:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -v -trimpath -ldflags="-s -w -X '$(BINARY)/cmd.version=$(VERSION)'" -o $(BINARY)-$(GOOS)-$(GOARCH)
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -v -trimpath -ldflags="-s -w -X '$(BINARY)/cmd.version=$(VERSION)'" -o $(BINARY)-$(GOOS)-$(GOARCH)
 
 build-macos:
 	$(MAKE) build GOOS=darwin GOARCH=arm64

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -57,29 +58,43 @@ func (u *UrlSource) GetBook(ef formatter.EpubFormat) (err error) {
 	if err != nil {
 		return err
 	}
-
-	var total int
 	var isReverse bool
-	numStr, _ := doc.Find(tocSlt + ":last-child").Attr("data-num")
-	if numStr == "1" {
+	firstChp, _ := doc.Find("div#catalog ul li" + ":nth-child(1)").Attr("data-num")
+	secChp, _ := doc.Find("div#catalog ul li" + ":nth-child(2)").Attr("data-num")
+	first, _ := strconv.Atoi(firstChp)
+	sec, _ := strconv.Atoi(secChp)
+	if first-sec > 0 {
 		isReverse = true
 	}
+	var total int
 	total = doc.Find(tocSlt).Length()
+	if total == 0 {
+		return errors.New("爬取错误: 章节数为 0")
+	}
+	total -= ef.Book.Jump
+	if total <= 0 {
+		return errors.New("跳过章节数[flag -j(jump)] 大于总章数")
+	}
 	doc.Find(tocSlt).Each(func(i int, s *goquery.Selection) {
 		index := i
 		if isReverse {
 			index = total - 1 - i
+			if i >= total {
+				return
+			}
+		} else {
+			if i < ef.Book.Jump {
+				return
+			}
 		}
 		if i == 0 {
 			ef.Book.Chapters = make([]models.Chapter, total)
 		}
-		ef.Book.Chapters[index].Title = s.Find("a").Text()
+		ef.Book.Chapters[index].Title = utils.PureTitle(s.Find("a").Text())
+
 		ef.Book.Chapters[index].Url, _ = s.Find("a").Attr("href")
 		ef.Book.Chapters[index].Url = utils.EmptyOrDomain(ef.Book.IsOld) + ef.Book.Chapters[index].Url
 	})
-	if len(ef.Book.Chapters) == 0 {
-		return errors.New("爬取错误: 章节数为 0")
-	}
 	stdout.Fmtf("章节数: %d", len(ef.Book.Chapters))
 	err = ef.InitBook()
 	if err != nil {
@@ -101,7 +116,6 @@ func (u *UrlSource) GetBook(ef formatter.EpubFormat) (err error) {
 		if doc.Find(titleSlt).Text() == "" {
 			return errors.New("当前章节爬取错误")
 		}
-		ef.Book.Chapters[i].Title = utils.PureTitle(ef.Book.Chapters[i].Title)
 
 		contentLen := len(node.Nodes)
 		var f func(int, *html.Node)
@@ -136,7 +150,7 @@ func (u *UrlSource) GetBook(ef formatter.EpubFormat) (err error) {
 		if err != nil {
 			return
 		}
-		time.Sleep(time.Duration(config.Cfg.DelayTime) * time.Millisecond)
+		time.Sleep(time.Duration(ef.Delay) * time.Millisecond)
 	}
 	err = ef.Build()
 	if err != nil {

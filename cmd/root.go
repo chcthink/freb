@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	formatCmd  = "format"
 	idCmd      = "id"
 	coverCmd   = "cover"
 	volCmd     = "vol"
@@ -29,7 +28,8 @@ const (
 	descCmd    = "desc"
 	langCmd    = "lang"
 	pathCmd    = "path"
-	// fontCmd   = "font"
+	jumpCmd    = "jump"
+	delayCmd   = "delay"
 )
 
 const (
@@ -44,7 +44,6 @@ const (
 )
 
 func init() {
-	// rootCmd.PersistentFlags().StringVarP(&novel.Format, formatCmd, "f", "epub", "转换至指定格式 默认 epub")
 	rootCmd.PersistentFlags().StringVarP(&novel.Id, idCmd, "i", "", "下载书本id")
 	rootCmd.PersistentFlags().StringVarP(&novel.Cover, coverCmd, "c", coverDefault, "封面路径")
 	rootCmd.PersistentFlags().StringVarP(&novel.Out, outCmd, "o", "", "输出文件名")
@@ -55,7 +54,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&novel.IsDesc, descCmd, "d", true, "是否包含制作说明,默认包含,使用 -d 来取消包含")
 	rootCmd.PersistentFlags().StringVarP(&novel.Lang, langCmd, "l", "zh-Hans", "默认中文zh-Hans,英文 en")
 	rootCmd.PersistentFlags().StringVarP(&novel.Path, pathCmd, "p", "", "转化txt路径")
-	// rootCmd.PersistentFlags().StringVarP(&novel.Font, fontCmd, "w", "", "正文字体字体")
+	rootCmd.PersistentFlags().IntVarP(&novel.Jump, jumpCmd, "j", 0, "跳过章节数")
+	rootCmd.PersistentFlags().IntVarP(&novel.Delay, delayCmd, "t", 0, "每章延迟毫秒数")
 }
 
 var novel models.Book
@@ -122,6 +122,9 @@ func CheckFlag(cmd *cobra.Command, cmdPath string) (err error) {
 
 	if len(novel.Id) > 0 {
 		novel.IsOld = utils.CheckNum(novel.Id)
+	}
+	if !cmd.PersistentFlags().Changed(delayCmd) || novel.Delay < 0 {
+		novel.Delay = config.Cfg.DelayTime
 	}
 	return
 }

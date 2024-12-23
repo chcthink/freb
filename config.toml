@@ -1,5 +1,6 @@
 # 配置文件
-delay_time = 1500
+# 每章延迟 800 毫秒爬取
+delay_time = 800
 # ------- EPub内容 HTML --------- #
 # 制作说明
 [style]

@@ -12,9 +12,9 @@
 
 #### 预览
 <p align="center">
-  <img style="box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.5); border-radius: 10px;" src="docs/assets/img/git-intro.png" width="30%" height="auto" />
-  <img style="box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.5); border-radius: 10px;" src="docs/assets/img/git-vol.png" width="30%" height="auto"  />
-  <img style="box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.5); border-radius: 10px;" src="docs/assets/img/git-chapter.png" width="30%"  height="auto" />
+  <img src="docs/assets/img/git-intro.png" width="30%" height="auto" />
+  <img src="docs/assets/img/git-vol.png" width="30%" height="auto"  />
+  <img src="docs/assets/img/git-chapter.png" width="30%"  height="auto" />
 </p>
 #### How to use
 

@@ -40,8 +40,8 @@ const (
 )
 
 func GetConfig() error {
-	tmp := os.TempDir()
-	source, err := utils.LocalOrDownload(cfgPath, tmp)
+	Cfg.TmpDir = os.TempDir()
+	source, err := utils.LocalOrDownload(cfgPath, Cfg.TmpDir)
 	if err != nil {
 		return fmt.Errorf(cfgErr, err)
 	}
@@ -50,7 +50,6 @@ func GetConfig() error {
 		return fmt.Errorf(cfgErr, err)
 	}
 	err = file.Unmarshal(&Cfg)
-	Cfg.TmpDir = tmp
 	if err != nil {
 		return fmt.Errorf(cfgErr, err)
 	}

@@ -17,6 +17,8 @@ type Book struct {
 	Out        string
 	Lang       string
 	Path       string
+	Jump       int
+	Delay      int
 	IsDesc     bool
 	IsOld      bool
 	// Font     string

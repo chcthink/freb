@@ -4,7 +4,8 @@
  - 转化 TXT 至 EPub
 
 > 限制爬取频率防止被 ban
-> 频率(config.toml delay_time)为 每章节/1.5s
+> 默认频率(config.toml delay_time)为 每章节/0.8s
+> 已测试在域名`69shuba.cx` 下 每章节/0.8s不会被 ban
 
 #### 功能
  - 支持Apple books(ibooks)自定义字体

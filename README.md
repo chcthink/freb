@@ -1,16 +1,11 @@
 #### 介绍
-
- - 下载小说并以 EPub 格式存储
- - 转化 TXT 至 EPub
+ - 支持Apple books(ibooks)自定义字体
+ - 从 69 书吧下载小说并转化EPub
+ - 本地 TXT 转化为 EPub
 
 > 限制爬取频率防止被 ban
 > 默认频率(config.toml delay_time)为 每章节/0.8s
 > 已测试在域名`69shuba.cx` 下 每章节/0.8s不会被 ban
-
-#### 功能
- - 支持Apple books(ibooks)自定义字体
- - 从 69 书吧下载小说并转化EPub
- - 本地 TXT 转化为 EPub
 
 #### 预览
 <p align="center">

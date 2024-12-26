@@ -9,7 +9,8 @@
 
 #### 功能
  - 支持Apple books(ibooks)自定义字体
- - 删除多余字符
+ - 从 69 书吧下载小说并转化EPub
+ - 本地 TXT 转化为 EPub
 
 #### 预览
 <p align="center">
@@ -47,10 +48,13 @@
 ```
 
 #### Tips
+ - 由于 69 书吧需要魔法访问,因此本工具也需要魔法
  - 当书籍 ID 为数字且在搜索列表存在封面情况下无法获取封面,尝试重新执行命令
  - 命令每次执行默认会从 github 下载静态文件,包括样式文件和配置文件暂存至本地,若想提高命令速度,可将代码库下的 `config.toml` 和`assets`目录下载至命令同一目录
  - 可以通过修改 `assets`目录和 `config.toml` 文件来自定义 EPub
- - txt 读取整合 [kaf-cli](https://github.com/ystyle/kaf-cli)
- - 排版样式参考使用“阡陌居-笙歌夜夜”
- - 图片来源 pixabay 作者: BiancaVanDijk
- - 字体采用 [975 Maru](https://github.com/lxgw/975maru)
+
+#### 感谢
+ - TXT转化: [kaf-cli](https://github.com/ystyle/kaf-cli)
+ - 排版样式: 阡陌居-笙歌夜夜(~~怎么就不能注册了~~)
+ - 图片: [BiancaVanDijk](https://pixabay.com/users/biancavandijk-9606149/)
+ - 字体: [975 Maru](https://github.com/lxgw/975maru)

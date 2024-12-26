@@ -49,7 +49,7 @@
  - 可以通过修改 `assets`目录和 `config.toml` 文件来自定义 EPub
 
 #### 感谢
- - TXT转化: [kaf-cli](https://github.com/ystyle/kaf-cli)
+ - TXT转化部分参考: [kaf-cli](https://github.com/ystyle/kaf-cli)
  - 排版样式: 阡陌居-笙歌夜夜(~~怎么就不能注册了~~)
  - 图片: [BiancaVanDijk](https://pixabay.com/users/biancavandijk-9606149/)
  - 字体: [975 Maru](https://github.com/lxgw/975maru)

@@ -1,13 +1,15 @@
 package utils
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
 
 var (
 	chapterNumRegs    []*regexp.Regexp
-	chapterPreNumRegs []*regexp.Regexp
+	chapterPreNumRegs *regexp.Regexp
+	chapterNumReg     *regexp.Regexp
 	introReg          *regexp.Regexp
 	chapterSubNumReg  *regexp.Regexp
 	volReg            *regexp.Regexp
@@ -28,20 +30,18 @@ func init() {
 	var chapterNum = []string{
 		`^章节(目录)?`,
 		`第[0-9一二三四五六七八九十零〇百千两 ]+[章回节集卷部]`,
-		`^\d+\.?`,
+		`^\d+[\.:：]?`,
 		`^[Ss]ection.{1,20}$`,
 		`^[Cc]hapter.{1,20}$`,
 		`^[Pp]age.{1,20}$`,
-	}
-	for _, pattern := range append(chapterPreNum) {
-		re := regexp.MustCompile(pattern)
-		chapterPreNumRegs = append(chapterPreNumRegs, re)
 	}
 	for _, pattern := range append(chapterPreNum, chapterNum...) {
 		re := regexp.MustCompile(pattern)
 		chapterNumRegs = append(chapterNumRegs, re)
 	}
+	chapterPreNumRegs = regexp.MustCompile(strings.Join(chapterPreNum, "|"))
 	introReg = regexp.MustCompile("(文章|内容)简介([:：])?")
+	chapterNumReg = regexp.MustCompile(strings.Join(chapterNum, "|"))
 	chapterSubNumReg = regexp.MustCompile("[(（][0-9一二三四五六七八九十零〇百千两上中下 ][)）]")
 	volReg = regexp.MustCompile("^第[0-9一二三四五六七八九十零〇百千两 ]+[卷部]")
 	authorReg = regexp.MustCompile("作者([:：])?")
@@ -76,45 +76,38 @@ func ChapterTitleByDefaultReg(str string) (num, title, subNum string) {
 
 func PureTitle(str string) (title string) {
 	str = strings.TrimSpace(str)
-	nStr := strings.Split(str, " ")
-	// find latest num
 	num := findNumInTitle(str)
-	if len(nStr) > 1 {
-		for i := len(nStr) - 1; i >= 0; i-- {
-			num = findNumInTitle(nStr[i])
-			if num != "" {
-				break
-			}
-		}
-	}
-
+	fmt.Println(num)
 	if num != "" {
 		subTitle := strings.TrimSpace(strings.Split(str, num)[1])
 		if subTitle == "" {
 			title = num
 			return
 		}
+		if strings.HasSuffix(num, "：") {
+			return strings.Join([]string{num, subTitle}, "")
+		}
 		return strings.Join([]string{num, subTitle}, " ")
 	}
 	return
 }
 
-func checkPreNumInTitle(str string) bool {
-	for _, reg := range chapterPreNumRegs {
-		if reg.MatchString(str) {
-			return reg.MatchString(str)
+func findNumInTitle(str string) (match string) {
+	strs := strings.Split(str, " ")
+	for _, s := range strs {
+		tmp := strings.TrimSpace(s)
+		if chapterPreNumRegs.MatchString(tmp) {
+			return s
+		}
+		nums := chapterNumReg.FindAllString(tmp, -1)
+		for i := range nums {
+			t := strings.Split(str, nums[i])
+			if strings.TrimSpace(t[len(t)-1]) != "" {
+				match = nums[i]
+			}
 		}
 	}
-	return false
-}
-
-func findNumInTitle(str string) string {
-	for _, reg := range chapterNumRegs {
-		if reg.MatchString(str) {
-			return reg.FindString(str)
-		}
-	}
-	return ""
+	return
 }
 
 func VolByDefaultReg(str string) (num, title string, isVol bool) {

@@ -5,5 +5,5 @@ import (
 )
 
 type Source interface {
-	GetBook(formatter.EpubFormat) error
+	GetBook(*formatter.EpubFormat) error
 }

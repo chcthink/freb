@@ -30,6 +30,7 @@ type Config struct {
 	*Selector
 	TmpDir    string `toml:"-"`
 	DelayTime int    `toml:"delay_time"`
+	Cookies   map[string]string
 }
 
 var Cfg Config

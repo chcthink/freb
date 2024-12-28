@@ -6,6 +6,7 @@ toolchain go1.23.3
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.0
+	github.com/adrg/strutil v0.3.1
 	github.com/fatih/color v1.18.0
 	github.com/go-shiori/go-epub v1.2.1
 	github.com/pelletier/go-toml v1.9.5
@@ -15,7 +16,6 @@ require (
 )
 
 require (
-	github.com/adrg/strutil v0.3.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
 	github.com/gofrs/uuid/v5 v5.3.0 // indirect

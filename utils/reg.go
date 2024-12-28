@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"fmt"
+	"html"
 	"regexp"
 	"strings"
 )
@@ -25,11 +25,11 @@ func init() {
 	var chapterPreNum = []string{
 		`^引子$`,
 		`^楔子$`,
-		`^序章?`,
+		`^序[章\.:：]?`,
 	}
 	var chapterNum = []string{
 		`^章节(目录)?`,
-		`第[0-9一二三四五六七八九十零〇百千两 ]+[章回节集卷部]`,
+		`^第?[0-9一二三四五六七八九十零〇百千两 ]+[章回节集卷部]`,
 		`^\d+[\.:：]?`,
 		`^[Ss]ection.{1,20}$`,
 		`^[Cc]hapter.{1,20}$`,
@@ -43,7 +43,7 @@ func init() {
 	introReg = regexp.MustCompile("(文章|内容)简介([:：])?")
 	chapterNumReg = regexp.MustCompile(strings.Join(chapterNum, "|"))
 	chapterSubNumReg = regexp.MustCompile("[(（][0-9一二三四五六七八九十零〇百千两上中下 ][)）]")
-	volReg = regexp.MustCompile("^第[0-9一二三四五六七八九十零〇百千两 ]+[卷部]")
+	volReg = regexp.MustCompile("^第?[0-9一二三四五六七八九十零〇百千两 ]+[卷部]")
 	authorReg = regexp.MustCompile("作者([:：])?")
 	endReg = regexp.MustCompile("大结局|最终话")
 	urlReg = regexp.MustCompile("^https?://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]")
@@ -74,10 +74,19 @@ func ChapterTitleByDefaultReg(str string) (num, title, subNum string) {
 	return
 }
 
+func ChapterTitleWithoutNum(str string) (title string) {
+	str = html.UnescapeString(str)
+	num := findNumInTitle(str)
+	title = str
+	if num != "" {
+		title = strings.Split(title, num)[1]
+	}
+	return
+}
+
 func PureTitle(str string) (title string) {
 	str = strings.TrimSpace(str)
 	num := findNumInTitle(str)
-	fmt.Println(num)
 	if num != "" {
 		subTitle := strings.TrimSpace(strings.Split(str, num)[1])
 		if subTitle == "" {

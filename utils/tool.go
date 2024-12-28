@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"github.com/adrg/strutil"
+	"github.com/adrg/strutil/metrics"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -63,7 +65,7 @@ func SetImage(from, dir, filename string, handler func() *http.Request) (path st
 	}
 	if CheckUrl(from) {
 		path, err = DownloadTmp(dir, filename, func() *http.Request {
-			return NewGet(from)
+			return NewGetWithUserAgent(from)
 		})
 		if path != "" {
 			return
@@ -79,7 +81,7 @@ func SetImage(from, dir, filename string, handler func() *http.Request) (path st
 	}
 
 	path, err = DownloadTmp(dir, filename, func() *http.Request {
-		return NewGet(githubRaw + defaultImgDir + filename)
+		return NewGetWithUserAgent(githubRaw + defaultImgDir + filename)
 	})
 	return
 }
@@ -107,4 +109,20 @@ func GetBookInfo(str string) (name, author string) {
 		author = str[strings.IndexRune(str, hyphen):]
 	}
 	return
+}
+
+func SimilarStr(str1, str2 string) bool {
+	metricsList := []strutil.StringMetric{
+		metrics.NewJaro(),
+		metrics.NewSmithWatermanGotoh(),
+		metrics.NewJaroWinkler(),
+	}
+
+	// 遍历所有的度量方法，检查是否有一个相似度大于阈值
+	for _, metric := range metricsList {
+		if strutil.Similarity(str1, str2, metric) > 0.7 {
+			return true
+		}
+	}
+	return false
 }

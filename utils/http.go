@@ -28,25 +28,32 @@ const (
 	tocPage      = "https://www.69yuedu.net/article/%s.html"
 )
 
-func NewGet(url string) (req *http.Request) {
+func NewGetWithUserAgent(url string) (req *http.Request) {
 	req, _ = http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("User-Agent", userAgent)
 	return
 }
 
-// GetDom 获取 HTML DOM
-func GetDom(url string) (doc *goquery.Document, err error) {
+// GetDomByDefault 获取 HTML DOM
+func GetDomByDefault(url string) (doc *goquery.Document, err error) {
+	req := NewGetWithUserAgent(url)
+	return GetDom(url, req, simplifiedchinese.GBK.NewDecoder())
+}
+
+func GetDom(url string, req *http.Request, t transform.Transformer) (doc *goquery.Document, err error) {
 	if !CheckUrl(url) {
 		return nil, errors.New(stdout.ErrUrl)
 	}
-	req := NewGet(url)
 	resp, err := http.DefaultClient.Do(req)
-
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(resp.Status)
+	}
 	defer resp.Body.Close()
-	doc, err = goquery.NewDocumentFromReader(transform.NewReader(resp.Body, simplifiedchinese.GBK.NewDecoder()))
+
+	doc, err = goquery.NewDocumentFromReader(transform.NewReader(resp.Body, t))
 	if err != nil {
 		return nil, err
 	}
@@ -126,9 +133,9 @@ const (
 func LocalOrDownload(path, tmpDir string) (source string, err error) {
 	if filePath, isExist := IsFileInExecDir(path); !isExist {
 		downloadUrl := githubRaw + path
-		stdout.Fmtf("正在从远程仓库下载文件: %s", downloadUrl)
+		stdout.Fmtfln("正在从远程仓库下载文件: %s", downloadUrl)
 		source, err = DownloadTmp(tmpDir, path, func() *http.Request {
-			return NewGet(downloadUrl)
+			return NewGetWithUserAgent(downloadUrl)
 		})
 		return
 	} else {

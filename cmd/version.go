@@ -18,6 +18,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "版本",
 	Run: func(cmd *cobra.Command, args []string) {
-		stdout.SysInfof("version: %s", version)
+		stdout.SysInfofln("version: %s", version)
 	},
 }

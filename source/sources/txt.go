@@ -30,7 +30,7 @@ func getBuffer(filename string) *bufio.Reader {
 	f, err := os.Open(filename)
 	defer f.Close()
 	if err != nil {
-		stdout.Errf("读取文件出错: %s", err.Error())
+		stdout.Errfln("读取文件出错: %s", err.Error())
 		os.Exit(1)
 	}
 	temBuf := bufio.NewReader(f)
@@ -40,7 +40,7 @@ func getBuffer(filename string) *bufio.Reader {
 		f.Seek(0, 0)
 		bs, err := io.ReadAll(f)
 		if err != nil {
-			stdout.Errf("读取文件出错: %s", err.Error())
+			stdout.Errfln("读取文件出错: %s", err.Error())
 			os.Exit(1)
 		}
 		var buf bytes.Buffer
@@ -58,10 +58,10 @@ func getBuffer(filename string) *bufio.Reader {
 	}
 }
 
-func (t *TxtSource) GetBook(ef formatter.EpubFormat) error {
+func (t *TxtSource) GetBook(ef *formatter.EpubFormat) error {
 	var contentList []models.Chapter
 
-	stdout.Fmt("正在读取txt文件...")
+	stdout.Fmtln("正在读取txt文件...")
 	start := time.Now()
 	buf := getBuffer(ef.Book.Path)
 	var title string
@@ -172,7 +172,7 @@ func (t *TxtSource) GetBook(ef formatter.EpubFormat) error {
 		return err
 	}
 	end := time.Now().Sub(start)
-	stdout.Successf("\n已生成书籍,使用时长: %s", end)
+	stdout.Successfln("\n已生成书籍,使用时长: %s", end)
 	return nil
 }
 

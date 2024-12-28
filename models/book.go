@@ -23,11 +23,17 @@ type Book struct {
 	IsOld      bool
 	// Font     string
 	Chapters []Chapter
+	Catalog  UrlWithCookie
 }
 
 type Chapter struct {
-	Url      string
-	Title    string
-	Content  string
-	Sections []Chapter
+	Url     string
+	Title   string
+	Content string
+	IsVol   bool
+}
+
+type UrlWithCookie struct {
+	Url    string
+	Cookie string
 }

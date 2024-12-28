@@ -18,18 +18,20 @@ import (
 )
 
 const (
-	idCmd      = "id"
-	coverCmd   = "cover"
-	volCmd     = "vol"
-	outCmd     = "out"
-	subCmd     = "sub"
-	descImgCmd = "img"
-	authorCmd  = "author"
-	descCmd    = "desc"
-	langCmd    = "lang"
-	pathCmd    = "path"
-	jumpCmd    = "jump"
-	delayCmd   = "delay"
+	idCmd            = "id"
+	coverCmd         = "cover"
+	volCmd           = "vol"
+	outCmd           = "out"
+	subCmd           = "sub"
+	descImgCmd       = "img"
+	authorCmd        = "author"
+	descCmd          = "desc"
+	langCmd          = "lang"
+	pathCmd          = "path"
+	jumpCmd          = "jump"
+	delayCmd         = "delay"
+	catalogUrlCmd    = "curl"
+	catalogCookieCmd = "cookie"
 )
 
 const (
@@ -56,6 +58,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&novel.Path, pathCmd, "p", "", "转化txt路径")
 	rootCmd.PersistentFlags().IntVarP(&novel.Jump, jumpCmd, "j", 0, "跳过章节数")
 	rootCmd.PersistentFlags().IntVarP(&novel.Delay, delayCmd, "t", 0, "每章延迟毫秒数")
+	rootCmd.PersistentFlags().StringVarP(&novel.Catalog.Url, catalogUrlCmd, "u", "", "章节爬取url 支持起点,番茄")
+	rootCmd.PersistentFlags().StringVarP(&novel.Catalog.Cookie, catalogCookieCmd, "k", "", "章节爬取cookie 起点需要")
 }
 
 var novel models.Book
@@ -64,13 +68,18 @@ var rootCmd = &cobra.Command{
 	Use:   "freb",
 	Short: "freb用于下载小说并转换至EPub",
 	Run: func(cmd *cobra.Command, args []string) {
+		err := config.GetConfig()
+		if err != nil {
+			stdout.Errln(fmt.Errorf("配置错误: %v", err))
+			return
+		}
 		path := novel.Path
 		if len(args) > 0 {
 			path = args[0]
 		}
-		err := CheckFlag(cmd, path)
+		err = CheckFlag(cmd, path)
 		if err != nil {
-			stdout.Err(err)
+			stdout.Errln(err)
 			return
 		}
 		var source source.Source
@@ -88,13 +97,13 @@ var rootCmd = &cobra.Command{
 		ef.AssetsPath = &formatter.AssetsPath{}
 		err = InitAssets(ef)
 		if err != nil {
-			stdout.Err(err)
+			stdout.Errln(err)
 			return
 		}
 
-		err = source.GetBook(ef)
+		err = source.GetBook(&ef)
 		if err != nil {
-			stdout.Err(err)
+			stdout.Errln(err)
 			return
 		}
 	},
@@ -102,17 +111,25 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		stdout.Err(err)
+		stdout.Errln(err)
 		os.Exit(1)
 	}
 }
 
 func CheckFlag(cmd *cobra.Command, cmdPath string) (err error) {
+	if novel.Catalog.Url != "" && novel.Catalog.Cookie == "" {
+		for domain, cookie := range config.Cfg.Cookies {
+			if strings.Contains(novel.Catalog.Url, domain) {
+				novel.Catalog.Cookie = cookie
+				break
+			}
+		}
+	}
 	if cmd.PersistentFlags().Changed(descCmd) {
 		novel.IsDesc = false
 	}
 	if len(cmdPath) == 0 && len(novel.Id) == 0 {
-		return errors.New(sourceErr)
+		return errors.New(fmt.Sprintf(sourceErr, cmdPath))
 	}
 	if len(cmdPath) > 0 {
 		if !utils.IsFileInWorkDir(cmdPath) {
@@ -134,7 +151,7 @@ func InitAssets(ef formatter.EpubFormat) (err error) {
 	novel.Cover, err = utils.SetImage(novel.Cover, config.Cfg.TmpDir, coverDefault, func() *http.Request {
 		var req *http.Request
 		if len(novel.Id) > 0 {
-			req = utils.NewGet(utils.CoverUrl(novel.IsOld, novel.Id))
+			req = utils.NewGetWithUserAgent(utils.CoverUrl(novel.IsOld, novel.Id))
 			req.Header.Set("Referer", utils.SearchUrl(novel.IsOld))
 			return req
 		}

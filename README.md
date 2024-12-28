@@ -7,6 +7,29 @@
 > 默认频率(config.toml delay_time)为 每章节/0.8s
 > 已测试在域名`69shuba.cx` 下 每章节/0.8s不会被 ban
 
+#### 测试功能
+
+##### 获取第三方目录
+> `v0.3.6` 版本支持从其他网站获取目录以保证目录的观赏性,现仅支持:
+> - 起点 (需要cookie)
+> - 番茄
+
+<p align="center">
+  <img src="docs/assets/img/qidian-cookie-1.png" width="40%" height="auto" />
+  <img src="docs/assets/img/qidian-cookie-2.png" width="40%" height="auto"  />
+</p>
+
+```shell
+# `-u` 指定爬取目录的 URL `-k` 指定 cookie 可以在`./config.toml` 中指定cookie
+./freb -u https://www.qidian.com/book/1035420986/ -k e1=xxxxxxxx
+```
+
+```toml
+# ----- 参考目录配置 catalog ------ #
+[cookies]
+qidian = "e1=........"
+```
+
 #### 预览
 <p align="center">
   <img src="docs/assets/img/git-intro.png" width="30%" height="auto" />
@@ -14,6 +37,23 @@
   <img src="docs/assets/img/git-chapter.png" width="30%"  height="auto" />
 </p>
 #### How to use
+
+```shell
+Flags:
+  -a, --author string   作者 (default "Unknown")
+  -c, --cover string    封面路径 (default "cover.jpg")
+  -t, --delay int       每章延迟毫秒数
+  -d, --desc            是否包含制作说明,默认包含,使用 -d 来取消包含 (default true)
+  -h, --help            help for freb
+  -i, --id string       下载书本id
+  -e, --img string      内容介绍logo (default "intro_logo.jpg")
+  -j, --jump int        跳过章节数
+  -l, --lang string     默认中文zh-Hans,英文 en (default "zh-Hans")
+  -o, --out string      输出文件名
+  -p, --path string     转化txt路径
+  -s, --sub string      每章标题logo (default "content_logo.jpg")
+  -b, --vol string      卷logo (default "vol.jpg")
+```
 
 ##### (一) 爬取小说并转化为 EPub
 > 69 书吧地址 

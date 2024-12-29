@@ -42,4 +42,9 @@ func TestPureText(t *testing.T) {
 		dstTitle := "254：将他带往虚夜宫"
 		checkTitle(title, dstTitle, PureTitle(title), t)
 	})
+	t.Run("羊没好", func(t *testing.T) {
+		title := "羊没好"
+		dstTitle := "羊没好"
+		checkTitle(title, dstTitle, PureTitle(title), t)
+	})
 }

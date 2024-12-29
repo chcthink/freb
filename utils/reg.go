@@ -87,6 +87,7 @@ func ChapterTitleWithoutNum(str string) (title string) {
 func PureTitle(str string) (title string) {
 	str = strings.TrimSpace(str)
 	num := findNumInTitle(str)
+	title = str
 	if num != "" {
 		subTitle := strings.TrimSpace(strings.Split(str, num)[1])
 		if subTitle == "" {

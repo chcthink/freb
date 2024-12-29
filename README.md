@@ -13,6 +13,7 @@
 > `v0.3.6` 版本支持从其他网站获取目录以保证目录的观赏性,现仅支持:
 > - 起点 (需要cookie)
 > - 番茄
+> - 七猫
 
 <p align="center">
   <img src="docs/assets/img/qidian-cookie-1.png" width="40%" height="auto" />
@@ -41,7 +42,9 @@ qidian = "e1=........"
 ```shell
 Flags:
   -a, --author string   作者 (default "Unknown")
+  -k, --cookie string   章节爬取cookie 起点需要
   -c, --cover string    封面路径 (default "cover.jpg")
+  -u, --curl string     章节爬取url 支持起点,番茄,天猫
   -t, --delay int       每章延迟毫秒数
   -d, --desc            是否包含制作说明,默认包含,使用 -d 来取消包含 (default true)
   -h, --help            help for freb

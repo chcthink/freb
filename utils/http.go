@@ -88,11 +88,11 @@ func GetWithUserAgent(url string) (req *http.Request) {
 // GetDomByDefault 获取 HTML DOM
 func GetDomByDefault(url string) (doc *goquery.Document, err error) {
 	req := GetWithUserAgent(url)
-	return TransDom2Doc(url, req, simplifiedchinese.GBK.NewDecoder())
+	return TransDom2Doc(req, simplifiedchinese.GBK.NewDecoder())
 }
 
-func TransDom2Doc(url string, req *http.Request, t transform.Transformer) (doc *goquery.Document, err error) {
-	if !CheckUrl(url) {
+func TransDom2Doc(req *http.Request, t transform.Transformer) (doc *goquery.Document, err error) {
+	if !CheckUrl(req.URL.String()) {
 		return nil, errors.New(stdout.ErrUrl)
 	}
 	resp, err := http.DefaultClient.Do(req)

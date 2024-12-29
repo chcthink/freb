@@ -49,7 +49,7 @@ func getCatalog(ef *formatter.EpubFormat, doc *goquery.Document) (err error) {
 	var isCatalog bool
 	var chapterIndex int
 	if ef.BookConf.Catalog.Url != "" {
-		err = source.GetCatalogByUrl(ef)
+		err = source.GetCatalogFromUrl(ef)
 		if err != nil {
 			return
 		}

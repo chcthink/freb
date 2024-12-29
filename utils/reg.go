@@ -164,6 +164,10 @@ func CheckNum(str string) bool {
 	return numReg.MatchString(str)
 }
 
+func GetNum(str string) string {
+	return numReg.FindString(str)
+}
+
 func GetIntro(str string) (isIntro bool, intro string) {
 	isIntro = introReg.MatchString(str)
 	if isIntro {

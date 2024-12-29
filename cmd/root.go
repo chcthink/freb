@@ -59,7 +59,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&bookConf.Path, pathCmd, "p", "", "转化txt路径")
 	rootCmd.PersistentFlags().IntVarP(&bookConf.Jump, jumpCmd, "j", 0, "跳过章节数")
 	rootCmd.PersistentFlags().IntVarP(&bookConf.Delay, delayCmd, "t", 0, "每章延迟毫秒数")
-	rootCmd.PersistentFlags().StringVarP(&bookConf.Catalog.Url, catalogUrlCmd, "u", "", "章节爬取url 支持起点,番茄")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.Catalog.Url, catalogUrlCmd, "u", "", "章节爬取url 支持起点,番茄,天猫")
 	rootCmd.PersistentFlags().StringVarP(&bookConf.Catalog.Cookie, catalogCookieCmd, "k", "", "章节爬取cookie 起点需要")
 }
 

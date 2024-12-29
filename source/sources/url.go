@@ -82,15 +82,20 @@ func getCatalog(ef *formatter.EpubFormat, doc *goquery.Document) (err error) {
 
 		url, _ := s.Find("a").Attr("href")
 		url = utils.EmptyOrDomain(ef.BookConf.IsOld) + url
+		title := s.Find("a").Text()
+
 		if isCatalog {
-			chapterIndex = setChapterUrl(chapterIndex, strings.TrimSpace(s.Find("a").Text()), url, ef)
+			chapterIndex = setChapterUrl(chapterIndex, strings.TrimSpace(title), url, ef)
 			if i == total-1 && ef.Chapters[chapterIndex-1].Url == url {
 				ef.Chapters = ef.Chapters[:chapterIndex]
 			}
 		} else {
-			ef.BookConf.Chapters[i].Title = utils.PureTitle(s.Find("a").Text())
+			ef.BookConf.Chapters[i].Title = utils.PureTitle(title)
 			ef.BookConf.Chapters[i].Url = url
 		}
+
+		// filter by config
+		ef.BookConf.Chapters[i].Title = utils.RemoveTitleFromCfg(ef.BookConf.Chapters[i].Title)
 	}, isReverse)
 	if isCatalog {
 		var cdbErrChapter [2]string
@@ -148,6 +153,9 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 		contentSlt = "div.txtnav"
 	}
 
+	// filter by config
+	ef.BookConf.Intro = utils.RemoveIntroFromCfg(ef.BookConf.Intro)
+
 	// chapter
 	stdout.Fmtln("正在获取目录信息...")
 	err = getCatalog(ef, doc)
@@ -190,6 +198,11 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 				if strings.Contains(raw, "本章完") {
 					return
 				}
+				raw = utils.RemoveContentFromCfg(raw)
+				if raw == "" {
+					return
+				}
+
 				ef.BookConf.Chapters[i].Content += ef.GenLine(raw)
 			}
 			if n.FirstChild != nil {

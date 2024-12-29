@@ -16,9 +16,32 @@
 > - 七猫
 
 <p align="center">
-  <img src="docs/assets/img/qidian-cookie-1.png" width="40%" height="auto" />
-  <img src="docs/assets/img/qidian-cookie-2.png" width="40%" height="auto"  />
+  <img src="docs/assets/img/qidian-cookie-1.png" width="49%" height="auto" />
+  <img src="docs/assets/img/qidian-cookie-2.png" width="49%" height="auto"  />
 </p>
+
+#### 删除特定内容
+
+> 用于删除标题,书籍简介,文章内容中的广告等内容
+> 自行配置**正则表达式**,相关语法自行搜索
+> 注意: 
+> - 由于 golang/regexp 库的问题,正则不支持**非捕获组**
+> - 在配置文件中,正则需要用单引号包裹,如: `content = ['更多最新热门小说在6.9\*書吧看！']`
+
+```toml
+# 配置文件
+# 每章延迟 800 毫秒爬取
+delay_time = 800
+# ----- 参考目录配置 catalog ------ #
+[cookies]
+qidian = ""
+# ---- 排除文章广告 字段完全匹配----- #
+[remove]
+title = []
+intro = []
+content = ['更多最新热门小说在6.9\*書吧看！']
+#....
+```
 
 ```shell
 # `-u` 指定爬取目录的 URL `-k` 指定 cookie 可以在`./config.toml` 中指定cookie

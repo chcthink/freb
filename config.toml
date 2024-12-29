@@ -4,6 +4,11 @@ delay_time = 800
 # ----- 参考目录配置 catalog ------ #
 [cookies]
 qidian = ""
+# ---- 排除文章广告 字段正则匹配----- #
+[remove]
+title = []
+intro = []
+content = ['更多最新热门小说在6.9\*書吧看！']
 # ------- EPub内容 HTML --------- #
 # 制作说明
 [style]

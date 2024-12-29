@@ -25,12 +25,19 @@ type Selector struct {
 	Intro  string
 }
 
+type Remove struct {
+	Title   []string `toml:"title"`
+	Intro   []string `toml:"intro"`
+	Content []string `toml:"content"`
+}
+
 type Config struct {
 	*Style
 	*Selector
 	TmpDir    string `toml:"-"`
 	DelayTime int    `toml:"delay_time"`
 	Cookies   map[string]string
+	*Remove
 }
 
 var Cfg Config
@@ -41,6 +48,7 @@ const (
 )
 
 func GetConfig() error {
+	initConfig()
 	Cfg.TmpDir = os.TempDir()
 	source, err := utils.LocalOrDownload(cfgPath, Cfg.TmpDir)
 	if err != nil {
@@ -54,5 +62,13 @@ func GetConfig() error {
 	if err != nil {
 		return fmt.Errorf(cfgErr, err)
 	}
+	utils.InitRemoveReg(Cfg.Remove.Title, "title")
+	utils.InitRemoveReg(Cfg.Remove.Intro, "intro")
+	utils.InitRemoveReg(Cfg.Remove.Content, "content")
 	return nil
+}
+
+func initConfig() {
+	Cfg.Cookies = make(map[string]string)
+	Cfg.Remove = &Remove{}
 }

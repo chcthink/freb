@@ -180,3 +180,57 @@ func GetIntro(str string) (isIntro bool, intro string) {
 func ReplaceC0Control(str string) string {
 	return c0ControlReg.ReplaceAllString(str, "")
 }
+
+var (
+	rmTitleReg   []*regexp.Regexp
+	rmIntroReg   []*regexp.Regexp
+	rmContentReg []*regexp.Regexp
+)
+
+func InitRemoveReg(regs []string, set string) {
+	if set == "title" {
+		for _, reg := range regs {
+			rmTitleReg = append(rmTitleReg, regexp.MustCompile(reg))
+		}
+	}
+	if set == "intro" {
+		for _, reg := range regs {
+			rmIntroReg = append(rmIntroReg, regexp.MustCompile(reg))
+		}
+	}
+	if set == "content" {
+		for _, reg := range regs {
+			rmContentReg = append(rmContentReg, regexp.MustCompile(reg))
+		}
+	}
+}
+
+func RemoveTitleFromCfg(str string) (dst string) {
+	dst = str
+	for _, reg := range rmTitleReg {
+		if reg.MatchString(dst) {
+			dst = reg.ReplaceAllString(dst, "")
+		}
+	}
+	return
+}
+
+func RemoveIntroFromCfg(str string) (dst string) {
+	dst = str
+	for _, reg := range rmIntroReg {
+		if reg.MatchString(dst) {
+			dst = reg.ReplaceAllString(dst, "")
+		}
+	}
+	return
+}
+
+func RemoveContentFromCfg(str string) (dst string) {
+	dst = str
+	for _, reg := range rmContentReg {
+		if reg.MatchString(dst) {
+			dst = reg.ReplaceAllString(dst, "")
+		}
+	}
+	return
+}

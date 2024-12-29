@@ -1,10 +1,10 @@
 package models
 
-// Book 图书
+// BookConf 图书配置
 // Name 书名 Author 作者
 // Cover 封面 ContentImg 章封面 Vol 卷图
 // Chapters 章节
-type Book struct {
+type BookConf struct {
 	Name       string
 	Id         string
 	Cover      string

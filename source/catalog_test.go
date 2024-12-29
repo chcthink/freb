@@ -65,7 +65,7 @@ func TestFanqie(t *testing.T) {
 
 func TestQiDian(t *testing.T) {
 	var ef formatter.EpubFormat
-	ef.Book = &models.Book{
+	ef.BookConf = &models.BookConf{
 		Catalog: models.UrlWithCookie{
 			Url:    "https://www.qidian.com/book/1035420986/",
 			Cookie: "",

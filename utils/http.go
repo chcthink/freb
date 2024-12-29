@@ -28,7 +28,58 @@ const (
 	tocPage      = "https://www.69yuedu.net/article/%s.html"
 )
 
-func NewGetWithUserAgent(url string) (req *http.Request) {
+func Domain() string {
+	return domain
+}
+
+func SearchUrl(isOld bool) string {
+	if isOld {
+		return oldSearchUrl
+	}
+	return searchUrl
+}
+
+func TocUrl(isOld bool, id string) string {
+	if isOld {
+		return fmt.Sprintf(oldToc, id)
+	}
+	return fmt.Sprintf(tocPage, id)
+}
+
+func CoverUrl(isOld bool, id string) string {
+	if isOld {
+		bookId, _ := strconv.Atoi(id)
+		mid := strconv.FormatFloat(math.Floor(float64(bookId)/1000.0), 'f', 0, 64)
+		return strings.Join([]string{oldDomain, "fengmian", mid, id, id + "s.jpg"}, "/")
+	}
+	return fmt.Sprintf(coverUrl, id)
+}
+
+const (
+	githubRaw = "https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/"
+)
+
+func LocalOrDownload(path, tmpDir string) (source string, err error) {
+	if filePath, isExist := IsFileInExecDir(path); !isExist {
+		downloadUrl := githubRaw + path
+		stdout.Fmtfln("正在从远程仓库下载文件: %s", downloadUrl)
+		source, err = DownloadTmp(tmpDir, path, func() *http.Request {
+			return GetWithUserAgent(downloadUrl)
+		})
+		return
+	} else {
+		return filePath, err
+	}
+}
+
+func EmptyOrDomain(isOld bool) string {
+	if isOld {
+		return ""
+	}
+	return domain
+}
+
+func GetWithUserAgent(url string) (req *http.Request) {
 	req, _ = http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("User-Agent", userAgent)
 	return
@@ -36,11 +87,11 @@ func NewGetWithUserAgent(url string) (req *http.Request) {
 
 // GetDomByDefault 获取 HTML DOM
 func GetDomByDefault(url string) (doc *goquery.Document, err error) {
-	req := NewGetWithUserAgent(url)
-	return GetDom(url, req, simplifiedchinese.GBK.NewDecoder())
+	req := GetWithUserAgent(url)
+	return TransDom2Doc(url, req, simplifiedchinese.GBK.NewDecoder())
 }
 
-func GetDom(url string, req *http.Request, t transform.Transformer) (doc *goquery.Document, err error) {
+func TransDom2Doc(url string, req *http.Request, t transform.Transformer) (doc *goquery.Document, err error) {
 	if !CheckUrl(url) {
 		return nil, errors.New(stdout.ErrUrl)
 	}
@@ -97,55 +148,4 @@ func DownloadTmp(dir, filename string, handler func() *http.Request) (path strin
 		}
 	}
 	return
-}
-
-func Domain() string {
-	return domain
-}
-
-func SearchUrl(isOld bool) string {
-	if isOld {
-		return oldSearchUrl
-	}
-	return searchUrl
-}
-
-func TocUrl(isOld bool, id string) string {
-	if isOld {
-		return fmt.Sprintf(oldToc, id)
-	}
-	return fmt.Sprintf(tocPage, id)
-}
-
-func CoverUrl(isOld bool, id string) string {
-	if isOld {
-		bookId, _ := strconv.Atoi(id)
-		mid := strconv.FormatFloat(math.Floor(float64(bookId)/1000.0), 'f', 0, 64)
-		return strings.Join([]string{oldDomain, "fengmian", mid, id, id + "s.jpg"}, "/")
-	}
-	return fmt.Sprintf(coverUrl, id)
-}
-
-const (
-	githubRaw = "https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/"
-)
-
-func LocalOrDownload(path, tmpDir string) (source string, err error) {
-	if filePath, isExist := IsFileInExecDir(path); !isExist {
-		downloadUrl := githubRaw + path
-		stdout.Fmtfln("正在从远程仓库下载文件: %s", downloadUrl)
-		source, err = DownloadTmp(tmpDir, path, func() *http.Request {
-			return NewGetWithUserAgent(downloadUrl)
-		})
-		return
-	} else {
-		return filePath, err
-	}
-}
-
-func EmptyOrDomain(isOld bool) string {
-	if isOld {
-		return ""
-	}
-	return domain
 }

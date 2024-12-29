@@ -42,7 +42,7 @@ var (
 )
 
 func GetCatalogByUrl(ef *formatter.EpubFormat) error {
-	req := utils.NewGetWithUserAgent(ef.Catalog.Url)
+	req := utils.GetWithUserAgent(ef.Catalog.Url)
 	if ef.Catalog.Cookie != "" {
 		req.Header.Set("Cookie", ef.Catalog.Cookie)
 	} else if CheckCookie(ef.Catalog.Url) {
@@ -50,7 +50,7 @@ func GetCatalogByUrl(ef *formatter.EpubFormat) error {
 	}
 	for domain, config := range selectMap {
 		if strings.Contains(ef.Catalog.Url, domain) {
-			doc, err := utils.GetDom(ef.Catalog.Url, req, config.Trans)
+			doc, err := utils.TransDom2Doc(ef.Catalog.Url, req, config.Trans)
 			if err != nil {
 				return err
 			}
@@ -71,10 +71,10 @@ func GetCatalogByUrl(ef *formatter.EpubFormat) error {
 					}
 				}
 				if !isExcludeVol {
-					ef.Book.Chapters = append(ef.Book.Chapters, models.Chapter{Title: vol, IsVol: true})
+					ef.BookConf.Chapters = append(ef.BookConf.Chapters, models.Chapter{Title: vol, IsVol: true})
 				}
 				s.Find(config.Chapter).Each(func(j int, ss *goquery.Selection) {
-					ef.Book.Chapters = append(ef.Book.Chapters, models.Chapter{Title: ss.Text()})
+					ef.BookConf.Chapters = append(ef.BookConf.Chapters, models.Chapter{Title: ss.Text()})
 				})
 
 			})

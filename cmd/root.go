@@ -42,27 +42,28 @@ const (
 )
 
 const (
+	fromErr   = "数据来源异常(-p -i 皆为空)"
 	sourceErr = "文件路径或地址错误: %s"
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&novel.Id, idCmd, "i", "", "下载书本id")
-	rootCmd.PersistentFlags().StringVarP(&novel.Cover, coverCmd, "c", coverDefault, "封面路径")
-	rootCmd.PersistentFlags().StringVarP(&novel.Out, outCmd, "o", "", "输出文件名")
-	rootCmd.PersistentFlags().StringVarP(&novel.ContentImg, subCmd, "s", contentImgDefault, "每章标题logo")
-	rootCmd.PersistentFlags().StringVarP(&novel.IntroImg, descImgCmd, "e", introImgDefault, "内容介绍logo")
-	rootCmd.PersistentFlags().StringVarP(&novel.Vol, volCmd, "b", volDefault, "卷logo")
-	rootCmd.PersistentFlags().StringVarP(&novel.Author, authorCmd, "a", "Unknown", "作者")
-	rootCmd.PersistentFlags().BoolVarP(&novel.IsDesc, descCmd, "d", true, "是否包含制作说明,默认包含,使用 -d 来取消包含")
-	rootCmd.PersistentFlags().StringVarP(&novel.Lang, langCmd, "l", "zh-Hans", "默认中文zh-Hans,英文 en")
-	rootCmd.PersistentFlags().StringVarP(&novel.Path, pathCmd, "p", "", "转化txt路径")
-	rootCmd.PersistentFlags().IntVarP(&novel.Jump, jumpCmd, "j", 0, "跳过章节数")
-	rootCmd.PersistentFlags().IntVarP(&novel.Delay, delayCmd, "t", 0, "每章延迟毫秒数")
-	rootCmd.PersistentFlags().StringVarP(&novel.Catalog.Url, catalogUrlCmd, "u", "", "章节爬取url 支持起点,番茄")
-	rootCmd.PersistentFlags().StringVarP(&novel.Catalog.Cookie, catalogCookieCmd, "k", "", "章节爬取cookie 起点需要")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.Id, idCmd, "i", "", "下载书本id")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.Cover, coverCmd, "c", coverDefault, "封面路径")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.Out, outCmd, "o", "", "输出文件名")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.ContentImg, subCmd, "s", contentImgDefault, "每章标题logo")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.IntroImg, descImgCmd, "e", introImgDefault, "内容介绍logo")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.Vol, volCmd, "b", volDefault, "卷logo")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.Author, authorCmd, "a", "Unknown", "作者")
+	rootCmd.PersistentFlags().BoolVarP(&bookConf.IsDesc, descCmd, "d", true, "是否包含制作说明,默认包含,使用 -d 来取消包含")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.Lang, langCmd, "l", "zh-Hans", "默认中文zh-Hans,英文 en")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.Path, pathCmd, "p", "", "转化txt路径")
+	rootCmd.PersistentFlags().IntVarP(&bookConf.Jump, jumpCmd, "j", 0, "跳过章节数")
+	rootCmd.PersistentFlags().IntVarP(&bookConf.Delay, delayCmd, "t", 0, "每章延迟毫秒数")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.Catalog.Url, catalogUrlCmd, "u", "", "章节爬取url 支持起点,番茄")
+	rootCmd.PersistentFlags().StringVarP(&bookConf.Catalog.Cookie, catalogCookieCmd, "k", "", "章节爬取cookie 起点需要")
 }
 
-var novel models.Book
+var bookConf models.BookConf
 
 var rootCmd = &cobra.Command{
 	Use:   "freb",
@@ -73,7 +74,7 @@ var rootCmd = &cobra.Command{
 			stdout.Errln(fmt.Errorf("配置错误: %v", err))
 			return
 		}
-		path := novel.Path
+		path := bookConf.Path
 		if len(args) > 0 {
 			path = args[0]
 		}
@@ -83,17 +84,17 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		var source source.Source
-		if len(novel.Id) > 0 {
+		if len(bookConf.Id) > 0 {
 			source = &sources.UrlSource{}
 		}
 		if len(path) > 0 {
 			source = &sources.TxtSource{}
-			novel.Name = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-			novel.Name, novel.Author = utils.GetBookInfo(novel.Name)
+			bookConf.Name = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+			bookConf.Name, bookConf.Author = utils.GetBookInfo(bookConf.Name)
 		}
 
 		var ef formatter.EpubFormat
-		ef.Book = &novel
+		ef.BookConf = &bookConf
 		ef.AssetsPath = &formatter.AssetsPath{}
 		err = InitAssets(ef)
 		if err != nil {
@@ -117,19 +118,19 @@ func Execute() {
 }
 
 func CheckFlag(cmd *cobra.Command, cmdPath string) (err error) {
-	if novel.Catalog.Url != "" && novel.Catalog.Cookie == "" {
+	if bookConf.Catalog.Url != "" && bookConf.Catalog.Cookie == "" {
 		for domain, cookie := range config.Cfg.Cookies {
-			if strings.Contains(novel.Catalog.Url, domain) {
-				novel.Catalog.Cookie = cookie
+			if strings.Contains(bookConf.Catalog.Url, domain) {
+				bookConf.Catalog.Cookie = cookie
 				break
 			}
 		}
 	}
 	if cmd.PersistentFlags().Changed(descCmd) {
-		novel.IsDesc = false
+		bookConf.IsDesc = false
 	}
-	if len(cmdPath) == 0 && len(novel.Id) == 0 {
-		return errors.New(fmt.Sprintf(sourceErr, cmdPath))
+	if len(cmdPath) == 0 && len(bookConf.Id) == 0 {
+		return errors.New(fromErr)
 	}
 	if len(cmdPath) > 0 {
 		if !utils.IsFileInWorkDir(cmdPath) {
@@ -137,22 +138,22 @@ func CheckFlag(cmd *cobra.Command, cmdPath string) (err error) {
 		}
 	}
 
-	if len(novel.Id) > 0 {
-		novel.IsOld = utils.CheckNum(novel.Id)
+	if len(bookConf.Id) > 0 {
+		bookConf.IsOld = utils.CheckNum(bookConf.Id)
 	}
-	if !cmd.PersistentFlags().Changed(delayCmd) || novel.Delay < 0 {
-		novel.Delay = config.Cfg.DelayTime
+	if !cmd.PersistentFlags().Changed(delayCmd) || bookConf.Delay < 0 {
+		bookConf.Delay = config.Cfg.DelayTime
 	}
 	return
 }
 
 func InitAssets(ef formatter.EpubFormat) (err error) {
 	// image
-	novel.Cover, err = utils.SetImage(novel.Cover, config.Cfg.TmpDir, coverDefault, func() *http.Request {
+	bookConf.Cover, err = utils.SetImage(bookConf.Cover, config.Cfg.TmpDir, coverDefault, func() *http.Request {
 		var req *http.Request
-		if len(novel.Id) > 0 {
-			req = utils.NewGetWithUserAgent(utils.CoverUrl(novel.IsOld, novel.Id))
-			req.Header.Set("Referer", utils.SearchUrl(novel.IsOld))
+		if len(bookConf.Id) > 0 {
+			req = utils.GetWithUserAgent(utils.CoverUrl(bookConf.IsOld, bookConf.Id))
+			req.Header.Set("Referer", utils.SearchUrl(bookConf.IsOld))
 			return req
 		}
 		return nil
@@ -160,15 +161,15 @@ func InitAssets(ef formatter.EpubFormat) (err error) {
 	if err != nil {
 		return
 	}
-	novel.IntroImg, err = utils.SetImage(novel.IntroImg, config.Cfg.TmpDir, introImgDefault, nil)
+	bookConf.IntroImg, err = utils.SetImage(bookConf.IntroImg, config.Cfg.TmpDir, introImgDefault, nil)
 	if err != nil {
 		return
 	}
-	novel.ContentImg, err = utils.SetImage(novel.ContentImg, config.Cfg.TmpDir, contentImgDefault, nil)
+	bookConf.ContentImg, err = utils.SetImage(bookConf.ContentImg, config.Cfg.TmpDir, contentImgDefault, nil)
 	if err != nil {
 		return
 	}
-	novel.Vol, err = utils.SetImage(novel.Vol, config.Cfg.TmpDir, volDefault, nil)
+	bookConf.Vol, err = utils.SetImage(bookConf.Vol, config.Cfg.TmpDir, volDefault, nil)
 	if err != nil {
 		return
 	}

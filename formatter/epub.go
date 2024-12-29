@@ -40,13 +40,13 @@ type Inner struct {
 
 type EpubFormat struct {
 	*epub.Epub
-	*models.Book
+	*models.BookConf
 	*Inner
 	*AssetsPath
 }
 
 func (e *EpubFormat) InitBook() (err error) {
-	e.Epub, err = epub.NewEpub(e.Book.Name)
+	e.Epub, err = epub.NewEpub(e.BookConf.Name)
 	e.Inner = &Inner{}
 	if err != nil {
 		stdout.Errln(err)
@@ -72,9 +72,9 @@ func (e *EpubFormat) InitBook() (err error) {
 		stdout.Errln(err)
 		return
 	}
-	e.SetLang(e.Book.Lang)
+	e.SetLang(e.BookConf.Lang)
 	// 添加标题
-	e.SetTitle(e.Book.Name)
+	e.SetTitle(e.BookConf.Name)
 	// 添加封面
 	if e.Cover != "" {
 		var image, coverCss string
@@ -96,9 +96,9 @@ func (e *EpubFormat) InitBook() (err error) {
 		}
 	}
 	// 添加作者
-	e.SetAuthor(e.Book.Author)
+	e.SetAuthor(e.BookConf.Author)
 	// 添加制作说明
-	if e.Book.IsDesc {
+	if e.BookConf.IsDesc {
 		stdout.Fmtln("正在添加制作说明...")
 		var insPageCss string
 		insPageCss, err = e.AddCSS(e.InstructionCss, "instruction.css")
@@ -106,7 +106,7 @@ func (e *EpubFormat) InitBook() (err error) {
 			stdout.Errln(err)
 			return
 		}
-		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Instruction.Dom, e.Book.Name, e.Book.Author),
+		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Instruction.Dom, e.BookConf.Name, e.BookConf.Author),
 			config.Cfg.Instruction.Title, "instruction.xhtml", insPageCss)
 		if err != nil {
 			stdout.Errln(err)
@@ -114,27 +114,27 @@ func (e *EpubFormat) InitBook() (err error) {
 		}
 	}
 	// 内容简介
-	if e.Book.Intro != "" {
+	if e.BookConf.Intro != "" {
 		stdout.Fmtln("正在添加内容简介...")
 		var logo string
 		logo, err = e.AddImage(e.IntroImg, path.Base(e.IntroImg))
 		if err != nil {
 			return
 		}
-		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Desc.Dom, logo, e.Book.Intro), config.Cfg.Desc.Title, "desc.xhtml", e.Inner.css)
+		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Desc.Dom, logo, e.BookConf.Intro), config.Cfg.Desc.Title, "desc.xhtml", e.Inner.css)
 		if err != nil {
 			return
 		}
 	}
-	if e.Book.Vol != "" {
+	if e.BookConf.Vol != "" {
 		e.volImage, err = e.AddImage(e.Vol, path.Base(e.Vol))
 		if err != nil {
 			stdout.Errln(err)
 			return
 		}
 	}
-	if e.Book.ContentImg != "" {
-		e.contentLogo, err = e.AddImage(e.Book.ContentImg, path.Base(e.ContentImg))
+	if e.BookConf.ContentImg != "" {
+		e.contentLogo, err = e.AddImage(e.BookConf.ContentImg, path.Base(e.ContentImg))
 		if err != nil {
 			stdout.Errln(err)
 			return
@@ -163,7 +163,7 @@ func (e *EpubFormat) GenLine2Buffer(str string, buf *bytes.Buffer) {
 }
 
 func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err error) {
-	title := e.Book.Chapters[index].Title
+	title := e.BookConf.Chapters[index].Title
 	fmt.Printf("\r[%d/%d]\033[K%s", index+1, len(e.Chapters), title)
 	if volNum, volTitle, isVol := utils.VolByDefaultReg(title); isVol {
 		e.volIndex += 1
@@ -178,7 +178,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 
 	num, name, subNum := utils.ChapterTitleByDefaultReg(title)
 	if vol == "" {
-		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Chapter+e.Book.Chapters[index].Content,
+		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Chapter+e.BookConf.Chapters[index].Content,
 			e.contentLogo, num, name, subNum), strings.Join([]string{num, name, subNum}, " "),
 			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.Inner.css)
 		if err != nil {
@@ -186,7 +186,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 			return
 		}
 	} else {
-		_, err = e.AddSubSection(vol, fmt.Sprintf(config.Cfg.Chapter+e.Book.Chapters[index].Content,
+		_, err = e.AddSubSection(vol, fmt.Sprintf(config.Cfg.Chapter+e.BookConf.Chapters[index].Content,
 			e.contentLogo, num, name, subNum), strings.Join([]string{num, name, subNum}, " "),
 			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.Inner.css)
 		if err != nil {
@@ -203,5 +203,5 @@ func (e *EpubFormat) Build() error {
 	if e.Out != "" {
 		return e.Epub.Write(e.Out)
 	}
-	return e.Epub.Write(e.Name + "-" + e.Book.Author + ".epub")
+	return e.Epub.Write(e.Name + "-" + e.BookConf.Author + ".epub")
 }

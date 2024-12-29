@@ -63,7 +63,7 @@ func (t *TxtSource) GetBook(ef *formatter.EpubFormat) error {
 
 	stdout.Fmtln("正在读取txt文件...")
 	start := time.Now()
-	buf := getBuffer(ef.Book.Path)
+	buf := getBuffer(ef.BookConf.Path)
 	var title string
 	content := &bytes.Buffer{}
 	tmp := ""
@@ -98,9 +98,9 @@ func (t *TxtSource) GetBook(ef *formatter.EpubFormat) error {
 		}
 		if len(contentList) == 0 {
 			if isAuthor, author := utils.GetAuthor(line); isAuthor {
-				ef.Book.Author = author
+				ef.BookConf.Author = author
 				if tmp != "" {
-					ef.Book.Name = tmp
+					ef.BookConf.Name = tmp
 				}
 				continue
 			}
@@ -158,13 +158,13 @@ func (t *TxtSource) GetBook(ef *formatter.EpubFormat) error {
 			Content: content.String(),
 		})
 	}
-	ef.Book.Chapters = contentList
+	ef.BookConf.Chapters = contentList
 	err := ef.InitBook()
 	if err != nil {
 		return err
 	}
 	var volPath string
-	for i := range ef.Book.Chapters {
+	for i := range ef.BookConf.Chapters {
 		volPath, err = ef.GenBookContent(i, volPath)
 	}
 	err = ef.Build()

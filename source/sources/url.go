@@ -21,14 +21,14 @@ type UrlSource struct {
 
 func setChapterUrl(i int, title, url string, ef *formatter.EpubFormat) (index int) {
 	index = i
-	if index < len(ef.Book.Chapters) {
-		if ef.Book.Chapters[index].IsVol {
+	if index < len(ef.BookConf.Chapters) {
+		if ef.BookConf.Chapters[index].IsVol {
 			index++
 		}
 		title = utils.ChapterTitleWithoutNum(title)
-		checkTitle := utils.ChapterTitleWithoutNum(ef.Book.Chapters[index].Title)
+		checkTitle := utils.ChapterTitleWithoutNum(ef.BookConf.Chapters[index].Title)
 		if utils.SimilarStr(title, checkTitle) {
-			ef.Book.Chapters[index].Url = url
+			ef.BookConf.Chapters[index].Url = url
 			index++
 		}
 	}
@@ -37,7 +37,7 @@ func setChapterUrl(i int, title, url string, ef *formatter.EpubFormat) (index in
 
 func getCatalog(ef *formatter.EpubFormat, doc *goquery.Document) (err error) {
 	var toc, tocSlt string
-	if !ef.Book.IsOld {
+	if !ef.BookConf.IsOld {
 		toc, _ = doc.Find("a.btn:first-child").Attr("href")
 		toc = utils.Domain() + toc
 		tocSlt = "div#chapters ul li"
@@ -48,7 +48,7 @@ func getCatalog(ef *formatter.EpubFormat, doc *goquery.Document) (err error) {
 
 	var isCatalog bool
 	var chapterIndex int
-	if ef.Book.Catalog.Url != "" {
+	if ef.BookConf.Catalog.Url != "" {
 		err = source.GetCatalogByUrl(ef)
 		if err != nil {
 			return
@@ -68,28 +68,28 @@ func getCatalog(ef *formatter.EpubFormat, doc *goquery.Document) (err error) {
 	if total == 0 {
 		return errors.New("爬取错误: 章节数为 0")
 	}
-	total -= ef.Book.Jump
+	total -= ef.BookConf.Jump
 	if total <= 0 {
 		return errors.New("跳过章节数[flag -j(jump)] 大于总章数")
 	}
 	utils.AscEach(doc.Find(tocSlt), func(i int, s *goquery.Selection) {
-		if i < ef.Book.Jump {
+		if i < ef.BookConf.Jump {
 			return
 		}
-		if i == 0 && ef.Book.Chapters == nil {
-			ef.Book.Chapters = make([]models.Chapter, total)
+		if i == 0 && ef.BookConf.Chapters == nil {
+			ef.BookConf.Chapters = make([]models.Chapter, total)
 		}
 
 		url, _ := s.Find("a").Attr("href")
-		url = utils.EmptyOrDomain(ef.Book.IsOld) + url
+		url = utils.EmptyOrDomain(ef.BookConf.IsOld) + url
 		if isCatalog {
 			chapterIndex = setChapterUrl(chapterIndex, strings.TrimSpace(s.Find("a").Text()), url, ef)
 			if i == total-1 && ef.Chapters[chapterIndex-1].Url == url {
 				ef.Chapters = ef.Chapters[:chapterIndex]
 			}
 		} else {
-			ef.Book.Chapters[i].Title = utils.PureTitle(s.Find("a").Text())
-			ef.Book.Chapters[i].Url = url
+			ef.BookConf.Chapters[i].Title = utils.PureTitle(s.Find("a").Text())
+			ef.BookConf.Chapters[i].Url = url
 		}
 	}, isReverse)
 	if isCatalog {
@@ -97,10 +97,10 @@ func getCatalog(ef *formatter.EpubFormat, doc *goquery.Document) (err error) {
 		var errChapter string
 		for i := range ef.Chapters {
 			if ef.Chapters[i].Url == "" && !ef.Chapters[i].IsVol {
-				errChapter = ef.Book.Chapters[i].Title
+				errChapter = ef.BookConf.Chapters[i].Title
 				if i > 0 {
-					cdbErrChapter[0] = ef.Book.Chapters[i-1].Title
-					cdbErrChapter[1] = ef.Book.Chapters[i-1].Url
+					cdbErrChapter[0] = ef.BookConf.Chapters[i-1].Title
+					cdbErrChapter[1] = ef.BookConf.Chapters[i-1].Url
 				}
 				break
 			}
@@ -126,23 +126,23 @@ func getCatalog(ef *formatter.EpubFormat, doc *goquery.Document) (err error) {
 
 func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 	start := time.Now()
-	doc, err := utils.GetDomByDefault(utils.TocUrl(ef.Book.IsOld, ef.Book.Id))
+	doc, err := utils.GetDomByDefault(utils.TocUrl(ef.BookConf.IsOld, ef.BookConf.Id))
 	if err != nil {
 		return err
 	}
-	ef.Book.Name = doc.Find("div.booknav2 h1 a").Text()
+	ef.BookConf.Name = doc.Find("div.booknav2 h1 a").Text()
 
-	if ef.Book.Author == "Unknown" {
-		ef.Book.Author = doc.Find("div.booknav2 p a[href*='author']").Text()
+	if ef.BookConf.Author == "Unknown" {
+		ef.BookConf.Author = doc.Find("div.booknav2 p a[href*='author']").Text()
 	}
 	var titleSlt, contentSlt string
-	if !ef.Book.IsOld {
-		ef.Book.Intro = doc.Find("div.navtxt p:first-child").Text()
+	if !ef.BookConf.IsOld {
+		ef.BookConf.Intro = doc.Find("div.navtxt p:first-child").Text()
 
 		titleSlt = "div.chaptertitle h1"
 		contentSlt = "div.content"
 	} else {
-		ef.Book.Intro = doc.Find("div.content").Text()
+		ef.BookConf.Intro = doc.Find("div.content").Text()
 
 		titleSlt = "div.txtnav h1"
 		contentSlt = "div.txtnav"
@@ -154,7 +154,7 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 	if err != nil {
 		return err
 	}
-	stdout.Fmtfln("章节数: %d", len(ef.Book.Chapters))
+	stdout.Fmtfln("章节数: %d", len(ef.BookConf.Chapters))
 	err = ef.InitBook()
 	if err != nil {
 		return err
@@ -162,7 +162,7 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 	// contents
 	stdout.Fmtln("正在添加章节...")
 	var volPath string
-	for i, chapter := range ef.Book.Chapters {
+	for i, chapter := range ef.BookConf.Chapters {
 		if chapter.Url == "" {
 			continue
 		}
@@ -184,13 +184,13 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 					return
 				}
 				// filter title in content
-				if utils.SimilarStr(raw, ef.Book.Chapters[i].Title) && index <= 10 {
+				if utils.SimilarStr(raw, ef.BookConf.Chapters[i].Title) && index <= 10 {
 					return
 				}
 				if strings.Contains(raw, "本章完") {
 					return
 				}
-				ef.Book.Chapters[i].Content += ef.GenLine(raw)
+				ef.BookConf.Chapters[i].Content += ef.GenLine(raw)
 			}
 			if n.FirstChild != nil {
 				for c := n.FirstChild; c != nil; c = c.NextSibling {

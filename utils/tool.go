@@ -65,7 +65,7 @@ func SetImage(from, dir, filename string, handler func() *http.Request) (path st
 	}
 	if CheckUrl(from) {
 		path, err = DownloadTmp(dir, filename, func() *http.Request {
-			return NewGetWithUserAgent(from)
+			return GetWithUserAgent(from)
 		})
 		if path != "" {
 			return
@@ -81,7 +81,7 @@ func SetImage(from, dir, filename string, handler func() *http.Request) (path st
 	}
 
 	path, err = DownloadTmp(dir, filename, func() *http.Request {
-		return NewGetWithUserAgent(githubRaw + defaultImgDir + filename)
+		return GetWithUserAgent(githubRaw + defaultImgDir + filename)
 	})
 	return
 }

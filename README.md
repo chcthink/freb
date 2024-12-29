@@ -45,7 +45,7 @@ Flags:
   -a, --author string   作者 (default "Unknown")
   -k, --cookie string   章节爬取cookie 起点需要
   -c, --cover string    封面路径 (default "cover.jpg")
-  -u, --curl string     章节爬取url 支持起点,番茄,天猫
+  -u, --curl string     章节爬取url 支持起点,番茄,七猫
   -t, --delay int       每章延迟毫秒数
   -d, --desc            是否包含制作说明,默认包含,使用 -d 来取消包含 (default true)
   -h, --help            help for freb

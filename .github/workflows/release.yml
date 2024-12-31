@@ -43,7 +43,6 @@ jobs:
               zip -r "${file%.*}".zip assets/ config.toml 
               zip -r "${file%.*}".zip $file -j
             fi
-          cp
           done
       - name: Create Release
         id: create_release

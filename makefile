@@ -9,6 +9,9 @@ git:
 tag:
 	$(MAKE) git && git tag $(VERSION) && git push origin $(VERSION)
 
+tag-remove:
+	git tag -d $(VERSION) && git push --delete origin $(VERSION)
+
 tag-build:
 	$(MAKE) tag && $(MAKE) build-all
 

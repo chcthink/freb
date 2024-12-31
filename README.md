@@ -94,7 +94,17 @@ Flags:
 3. 进入`https://www.69yuedu.net/article/abcdefg.html` 或者`https://69shuba.cx/book/123456.htm` 介绍页,`abcdefg`或`123456`
 为该书本 ID
 4. 自行定义 config.toml 配置,如 每章下载延时delay_time
-5. 在命令行输入以下命令下载小说
+5. 在命令行输入以下命令下载小说 (注: **Mac**会出现如下左图片)
+6. 在设置中仍然允许(右图片)再重新运行本工具
+
+<p align="center">
+  <img src="docs/assets/img/mac-err.png" width="44%" height="auto" />
+  <img src="docs/assets/img/mac-allow.png" width="44%" height="auto"  />
+</p>
+
+> 
+> 注: **Mac**需要先信任本工具
+> 
 
 > 当小说 id 为**数字**时,可以不用 -c 指定封面,工具会自动下载封面(若69书吧存在封面)
 ``` shell

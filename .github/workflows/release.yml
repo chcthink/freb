@@ -39,8 +39,10 @@ jobs:
           for file in tmp/*; do
             if [ -f "$file" ]; then
               echo "$file"
-              zip -r "${file%.*}".zip assets/ config.toml $file -j
+              zip -r "${file%.*}".zip assets/ config.toml 
+              zip -r "${file%.*}".zip $file -j
             fi
+          cp
           done
       - name: Create Release
         id: create_release

@@ -8,7 +8,7 @@ qidian = ""
 [remove]
 title = []
 intro = []
-content = ['更多最新热门小说在6.9\*書吧看！']
+content = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
 # ------- EPub内容 HTML --------- #
 # 制作说明
 [style]

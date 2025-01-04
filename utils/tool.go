@@ -46,12 +46,6 @@ func IsFileInExecDir(path string) (filePath string, isExist bool) {
 	return filePath, true
 }
 
-func PureEscapeHtml(str string) string {
-	str = strings.ReplaceAll(str, "<", "&lt;")
-	str = strings.ReplaceAll(str, ">", "&gt;")
-	return strings.ReplaceAll(str, "&", "&amp;")
-}
-
 const (
 	defaultImgDir = "assets/images/"
 )

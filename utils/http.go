@@ -7,6 +7,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
+	"html"
 	"io"
 	"math"
 	"net/http"
@@ -104,7 +105,14 @@ func TransDom2Doc(req *http.Request, t transform.Transformer) (doc *goquery.Docu
 	}
 	defer resp.Body.Close()
 
-	doc, err = goquery.NewDocumentFromReader(transform.NewReader(resp.Body, t))
+	var body []byte
+	body, err = io.ReadAll(transform.NewReader(resp.Body, t))
+	if err != nil {
+		return nil, err
+	}
+	unescapedBody := html.UnescapeString(string(body))
+
+	doc, err = goquery.NewDocumentFromReader(strings.NewReader(unescapedBody))
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@ import (
 	"freb/utils"
 	"freb/utils/stdout"
 	"github.com/go-shiori/go-epub"
+	"html"
 	"path"
 	"strconv"
 	"strings"
@@ -144,7 +145,7 @@ func (e *EpubFormat) InitBook() (err error) {
 }
 
 func cleanHTML(str string) string {
-	str = utils.PureEscapeHtml(str)
+	str = html.UnescapeString(str)
 	return utils.ReplaceC0Control(str)
 }
 
@@ -153,7 +154,7 @@ func genLine(str string) string {
 }
 
 func (e *EpubFormat) GenLine(str string) string {
-	str = cleanHTML(str)
+	// str = cleanHTML(str)
 	return genLine(str)
 }
 

@@ -3,7 +3,6 @@ package sources
 import (
 	"errors"
 	"fmt"
-	"freb/config"
 	"freb/formatter"
 	"freb/models"
 	"freb/source"
@@ -11,7 +10,6 @@ import (
 	"freb/utils/stdout"
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
-	"os"
 	"strings"
 	"time"
 )
@@ -135,26 +133,17 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 	if err != nil {
 		return err
 	}
-	ef.BookConf.Name = doc.Find("div.booknav2 h1 a").Text()
 
+	// get book basic info
+	ef.BookConf.Name = doc.Find("div.booknav2 h1 a").Text()
 	if ef.BookConf.Author == "Unknown" {
 		ef.BookConf.Author = doc.Find("div.booknav2 p a[href*='author']").Text()
 	}
-	var titleSlt, contentSlt string
-	if !ef.BookConf.IsOld {
-		ef.BookConf.Intro = doc.Find("div.navtxt p:first-child").Text()
-
-		titleSlt = "div.chaptertitle h1"
-		contentSlt = "div.content"
-	} else {
-		ef.BookConf.Intro = doc.Find("div.content").Text()
-
-		titleSlt = "div.txtnav h1"
-		contentSlt = "div.txtnav"
-	}
-
-	// filter by config
+	ef.BookConf.Intro = getIntro(doc, ef.BookConf.IsOld)
 	ef.BookConf.Intro = utils.RemoveIntroFromCfg(ef.BookConf.Intro)
+
+	// get selectors
+	titleSlt, contentSlt := getSelectors(ef.BookConf.IsOld)
 
 	// chapter
 	stdout.Fmtln("正在获取目录信息...")
@@ -225,8 +214,21 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 		return
 	}
 
-	_ = os.RemoveAll(config.Cfg.TmpDir)
 	totalTime := time.Since(start).Truncate(time.Second).String()
 	stdout.Successfln("\n已生成书籍,使用时长: %s", totalTime)
 	return
+}
+
+func getSelectors(isOld bool) (titleSlt, contentSlt string) {
+	if !isOld {
+		return "div.chaptertitle h1", "div.content"
+	}
+	return "div.txtnav h1", "div.txtnav"
+}
+
+func getIntro(doc *goquery.Document, isOld bool) string {
+	if !isOld {
+		return doc.Find("div.navtxt p:first-child").Text()
+	}
+	return doc.Find("div.content").Text()
 }

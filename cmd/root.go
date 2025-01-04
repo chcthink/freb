@@ -107,6 +107,7 @@ var rootCmd = &cobra.Command{
 			stdout.Errln(err)
 			return
 		}
+		_ = os.RemoveAll(config.Cfg.TmpDir)
 	},
 }
 

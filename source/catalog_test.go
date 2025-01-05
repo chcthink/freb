@@ -27,8 +27,7 @@ func TestGetCatalog(t *testing.T) {
 	t.Run("起点", func(t *testing.T) {
 		ef.BookConf = &models.BookConf{
 			Catalog: models.UrlWithCookie{
-				Url:    "https://www.qidian.com/book/1035420986/",
-				Cookie: "",
+				Url: "https://book.qidian.com/info/1017281778",
 			},
 		}
 		err := GetCatalogFromUrl(&ef)

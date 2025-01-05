@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"html"
 	"regexp"
 	"strings"
 )
@@ -75,7 +74,7 @@ func ChapterTitleByDefaultReg(str string) (num, title, subNum string) {
 }
 
 func ChapterTitleWithoutNum(str string) (title string) {
-	str = html.UnescapeString(str)
+	// str = html.UnescapeString(str)
 	num := findNumInTitle(str)
 	title = str
 	if num != "" {

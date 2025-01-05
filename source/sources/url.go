@@ -133,7 +133,6 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 	if err != nil {
 		return err
 	}
-
 	// get book basic info
 	ef.BookConf.Name = doc.Find("div.booknav2 h1 a").Text()
 	if ef.BookConf.Author == "Unknown" {
@@ -167,10 +166,9 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 		if err != nil {
 			return
 		}
-
 		node := doc.Find(contentSlt).Contents().Not("h1,div")
 		if doc.Find(titleSlt).Text() == "" {
-			return errors.New("当前章节爬取错误")
+			return fmt.Errorf("当前章节爬取错误: %s %s", chapter.Title, chapter.Url)
 		}
 
 		var f func(int, *html.Node)
@@ -221,7 +219,7 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat) (err error) {
 
 func getSelectors(isOld bool) (titleSlt, contentSlt string) {
 	if !isOld {
-		return "div.chaptertitle h1", "div.content"
+		return "div.txtbox h1", "div.content"
 	}
 	return "div.txtnav h1", "div.txtnav"
 }

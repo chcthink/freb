@@ -11,14 +11,7 @@
 
 ##### 获取第三方目录
 > `v0.3.6` 版本支持从其他网站获取目录以保证目录的观赏性,现仅支持:
-> - 起点 (需要cookie)
-> - 番茄
-> - 七猫
-
-<p align="center">
-  <img src="docs/assets/img/qidian-cookie-1.png" width="49%" height="auto" />
-  <img src="docs/assets/img/qidian-cookie-2.png" width="49%" height="auto"  />
-</p>
+> \- 起点 - 番茄 - 七猫
 
 #### 删除特定内容
 
@@ -45,14 +38,8 @@ content = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
 ```
 
 ```shell
-# `-u` 指定爬取目录的 URL `-k` 指定 cookie 可以在`./config.toml` 中指定cookie
-./freb -u https://www.qidian.com/book/1035420986/ -k e1=xxxxxxxx
-```
-
-```toml
-# ----- 参考目录配置 catalog ------ #
-[cookies]
-qidian = "e1=........"
+# `-u` 指定爬取目录的 URL 
+./freb -u https://www.qidian.com/book/1035420986/
 ```
 
 #### 预览

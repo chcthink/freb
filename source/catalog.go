@@ -28,11 +28,18 @@ type ScrapyConfig struct {
 var (
 	selectMap = map[string]ScrapyConfig{
 		"qidian": {
-			Trans:      transform.Nop,
-			Catalog:    "#allCatalog",
-			VolName:    ".volume-name",
-			Chapter:    ".chapter-name",
-			NeedCookie: true,
+			Trans:   transform.Nop,
+			Catalog: ".volume-wrap",
+			VolName: ".volume h3",
+			Chapter: ".book_name a",
+			Api:     "https://book.qidian.com/info/%s/",
+			VolFunc: func(doc *goquery.Selection) (volName string) {
+				volName = doc.Find(".volume h3").Contents().Not("a").Text()
+				if strings.Contains(volName, "·") {
+					volName = strings.Split(volName, "·")[0]
+				}
+				return
+			},
 		},
 		"fanqienovel": {
 			Trans:   transform.Nop,
@@ -60,7 +67,7 @@ func GetCatalogFromUrl(ef *formatter.EpubFormat) (err error) {
 			break
 		}
 	}
-	if checkConfig.IsJSON {
+	if checkConfig.Api != "" {
 		ef.Catalog.Url = fmt.Sprintf(checkConfig.Api, utils.GetNum(ef.Catalog.Url))
 	}
 	req := utils.GetWithUserAgent(ef.Catalog.Url)
@@ -84,7 +91,12 @@ func GetCatalogByHTML(ef *formatter.EpubFormat, config ScrapyConfig, req *http.R
 	}
 	doc.Find(config.Catalog).Children().Each(func(i int, s *goquery.Selection) {
 		// filter vol
-		vol := strings.TrimSpace(s.Find(config.VolName).Contents().First().Text())
+		var vol string
+		if config.VolFunc != nil {
+			vol = config.VolFunc(s)
+		} else {
+			vol = strings.TrimSpace(s.Find(config.VolName).Contents().First().Text())
+		}
 		for _, pass := range passVols {
 			if strings.Contains(vol, pass) {
 				return

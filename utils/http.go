@@ -101,7 +101,7 @@ func TransDom2Doc(req *http.Request, t transform.Transformer) (doc *goquery.Docu
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New(resp.Status)
+		return nil, fmt.Errorf("爬取错误:%s %s", req.URL.String(), resp.Status)
 	}
 	defer resp.Body.Close()
 

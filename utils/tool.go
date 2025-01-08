@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"fmt"
+	"freb/models"
+	"freb/utils/reg"
 	"github.com/adrg/strutil"
 	"github.com/adrg/strutil/metrics"
 	"net/http"
@@ -36,6 +39,11 @@ func IsFileInWorkDir(path string) bool {
 }
 
 func IsFileInExecDir(path string) (filePath string, isExist bool) {
+	if strings.Contains(models.Version, "dev") {
+		filePath, _ = findProjectRoot()
+		filePath = filepath.Join(filePath, path)
+		return filePath, true
+	}
 	execPath, _ := os.Executable()
 	execDir := filepath.Dir(execPath)
 	filePath = filepath.Join(execDir, path)
@@ -50,16 +58,16 @@ const (
 	defaultImgDir = "assets/images/"
 )
 
-func SetImage(from, dir, filename string, handler func() *http.Request) (path string, err error) {
-	if IsImgFile(from) {
-		if IsFileInWorkDir(from) {
-			path = from
+func SetImage(source, dir, filename, from string, handler func() *http.Request) (path string, err error) {
+	if IsImgFile(source) {
+		if IsFileInWorkDir(source) {
+			path = source
 			return
 		}
 	}
-	if CheckUrl(from) {
+	if reg.CheckUrl(source) {
 		path, err = DownloadTmp(dir, filename, func() *http.Request {
-			return GetWithUserAgent(from)
+			return GetWithUserAgent(source)
 		})
 		if path != "" {
 			return
@@ -75,7 +83,7 @@ func SetImage(from, dir, filename string, handler func() *http.Request) (path st
 	}
 
 	path, err = DownloadTmp(dir, filename, func() *http.Request {
-		return GetWithUserAgent(githubRaw + defaultImgDir + filename)
+		return GetWithUserAgent(from + defaultImgDir + filename)
 	})
 	return
 }
@@ -95,7 +103,7 @@ func GetBookInfo(str string) (name, author string) {
 		}
 		name = strings.Replace(str[start:end], string(bookNameMarkPre), "", 1)
 	}
-	if index := AuthorIndex(str); index > 0 {
+	if index := reg.AuthorIndex(str); index > 0 {
 		author = str[index:]
 	}
 	if strings.ContainsRune(str, hyphen) {
@@ -119,4 +127,18 @@ func SimilarStr(str1, str2 string) bool {
 		}
 	}
 	return false
+}
+
+func findProjectRoot() (string, error) {
+	work, _ := os.Getwd()
+	for {
+		if _, err := os.Stat(filepath.Join(work, "go.mod")); err == nil {
+			return work, nil
+		}
+		parent := filepath.Dir(work)
+		if parent == work {
+			return "", fmt.Errorf("未找到 go.mod 文件")
+		}
+		work = parent
+	}
 }

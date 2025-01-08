@@ -1,13 +1,16 @@
 package utils
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"freb/utils/reg"
 	"freb/utils/stdout"
-	"github.com/PuerkitoBio/goquery"
-	"golang.org/x/text/encoding/simplifiedchinese"
+	"github.com/antchfx/htmlquery"
+	"github.com/tidwall/gjson"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/charset"
 	"golang.org/x/text/transform"
-	"html"
 	"io"
 	"math"
 	"net/http"
@@ -19,50 +22,19 @@ import (
 
 // req
 const (
-	userAgent    = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-	oldDomain    = "https://69shuba.cx"
-	domain       = "https://www.69yuedu.net"
-	oldSearchUrl = "https://69shuba.cx/modules/article/search.php"
-	searchUrl    = "https://www.69yuedu.net/modules/article/search.php"
-	coverUrl     = "https://www.69yuedu.net/files/article/image/%s/cover.jpg"
-	oldToc       = "https://69shuba.cx/book/%s.htm"
-	tocPage      = "https://www.69yuedu.net/article/%s.html"
+	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 )
-
-func Domain() string {
-	return domain
-}
-
-func SearchUrl(isOld bool) string {
-	if isOld {
-		return oldSearchUrl
-	}
-	return searchUrl
-}
-
-func TocUrl(isOld bool, id string) string {
-	if isOld {
-		return fmt.Sprintf(oldToc, id)
-	}
-	return fmt.Sprintf(tocPage, id)
-}
-
-func CoverUrl(isOld bool, id string) string {
-	if isOld {
-		bookId, _ := strconv.Atoi(id)
-		mid := strconv.FormatFloat(math.Floor(float64(bookId)/1000.0), 'f', 0, 64)
-		return strings.Join([]string{oldDomain, "fengmian", mid, id, id + "s.jpg"}, "/")
-	}
-	return fmt.Sprintf(coverUrl, id)
-}
 
 const (
 	githubRaw = "https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/"
 )
 
-func LocalOrDownload(path, tmpDir string) (source string, err error) {
+func LocalOrDownload(path, tmpDir, from string) (source string, err error) {
 	if filePath, isExist := IsFileInExecDir(path); !isExist {
-		downloadUrl := githubRaw + path
+		if from == "" {
+			from = githubRaw
+		}
+		downloadUrl := from + path
 		stdout.Fmtfln("正在从远程仓库下载文件: %s", downloadUrl)
 		source, err = DownloadTmp(tmpDir, path, func() *http.Request {
 			return GetWithUserAgent(downloadUrl)
@@ -73,27 +45,36 @@ func LocalOrDownload(path, tmpDir string) (source string, err error) {
 	}
 }
 
-func EmptyOrDomain(isOld bool) string {
-	if isOld {
-		return ""
-	}
-	return domain
-}
-
 func GetWithUserAgent(url string) (req *http.Request) {
 	req, _ = http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("User-Agent", userAgent)
 	return
 }
 
-// GetDomByDefault 获取 HTML DOM
-func GetDomByDefault(url string) (doc *goquery.Document, err error) {
+func GetDomByDefault(url string) (doc *html.Node, err error) {
 	req := GetWithUserAgent(url)
-	return TransDom2Doc(req, simplifiedchinese.GBK.NewDecoder())
+	return TransDom2Doc(req)
 }
 
-func TransDom2Doc(req *http.Request, t transform.Transformer) (doc *goquery.Document, err error) {
-	if !CheckUrl(req.URL.String()) {
+func TransDom2Doc(req *http.Request) (doc *html.Node, err error) {
+	var body []byte
+	body, err = TransDom2Bytes(req)
+	unescapedBody := html.UnescapeString(string(body))
+	doc, err = htmlquery.Parse(strings.NewReader(unescapedBody))
+	if err != nil {
+		return nil, err
+	}
+	return doc, nil
+}
+
+func TransDom2JSON(req *http.Request) (rest gjson.Result, err error) {
+	var body []byte
+	body, err = TransDom2Bytes(req)
+	return gjson.ParseBytes(body), nil
+}
+
+func TransDom2Bytes(req *http.Request) (body []byte, err error) {
+	if !reg.CheckUrl(req.URL.String()) {
 		return nil, errors.New(stdout.ErrUrl)
 	}
 	resp, err := http.DefaultClient.Do(req)
@@ -105,18 +86,17 @@ func TransDom2Doc(req *http.Request, t transform.Transformer) (doc *goquery.Docu
 	}
 	defer resp.Body.Close()
 
-	var body []byte
-	body, err = io.ReadAll(transform.NewReader(resp.Body, t))
+	var buf []byte
+	buf, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	unescapedBody := html.UnescapeString(string(body))
-
-	doc, err = goquery.NewDocumentFromReader(strings.NewReader(unescapedBody))
+	e, _, _ := charset.DetermineEncoding(buf, resp.Header.Get("Content-Type"))
+	body, err = io.ReadAll(transform.NewReader(bytes.NewReader(buf), e.NewDecoder()))
 	if err != nil {
 		return nil, err
 	}
-	return doc, nil
+	return body, nil
 }
 
 func DownloadTmp(dir, filename string, handler func() *http.Request) (path string, err error) {
@@ -156,4 +136,10 @@ func DownloadTmp(dir, filename string, handler func() *http.Request) (path strin
 		}
 	}
 	return
+}
+
+func DivideThousandURL(str, id string) string {
+	bookId, _ := strconv.Atoi(id)
+	mid := strconv.FormatFloat(math.Floor(float64(bookId)/1000.0), 'f', 0, 64)
+	return fmt.Sprintf(str, mid, id, id)
 }

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"freb/formatter"
 	"freb/models"
-	"freb/utils"
+	"freb/utils/reg"
 	"freb/utils/stdout"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -58,8 +58,8 @@ func getBuffer(filename string) *bufio.Reader {
 	}
 }
 
-func (t *TxtSource) GetBook(ef *formatter.EpubFormat) error {
-	var contentList []models.Chapter
+func (t *TxtSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) error {
+	var contentList []models.Section
 
 	stdout.Fmtln("正在读取txt文件...")
 	start := time.Now()
@@ -75,7 +75,7 @@ func (t *TxtSource) GetBook(ef *formatter.EpubFormat) error {
 				if line = strings.TrimSpace(line); line != "" && !checkComment(line) {
 					ef.GenLine2Buffer(line, content)
 				}
-				contentList = append(contentList, models.Chapter{
+				contentList = append(contentList, models.Section{
 					Title:   title,
 					Content: content.String(),
 				})
@@ -97,24 +97,24 @@ func (t *TxtSource) GetBook(ef *formatter.EpubFormat) error {
 			continue
 		}
 		if len(contentList) == 0 {
-			if isAuthor, author := utils.GetAuthor(line); isAuthor {
-				ef.BookConf.Author = author
+			if isAuthor, author := reg.GetAuthor(line); isAuthor {
+				ef.Author = author
 				if tmp != "" {
-					ef.BookConf.Name = tmp
+					ef.Name = tmp
 				}
 				continue
 			}
 			tmp = line
 			intro := ""
 			if !isIntro {
-				if isIntro, intro = utils.GetIntro(line); isIntro {
+				if isIntro, intro = reg.GetIntro(line); isIntro {
 					if intro != "" {
 						ef.Intro = intro
 					}
 					continue
 				}
 			}
-			if !(utils.CheckTitle(line) || utils.CheckVol(line)) && isIntro {
+			if !(reg.CheckTitle(line) || reg.CheckVol(line)) && isIntro {
 				ef.Intro += line
 			} else {
 				isIntro = false
@@ -124,12 +124,12 @@ func (t *TxtSource) GetBook(ef *formatter.EpubFormat) error {
 
 		// 处理标题
 		if utf8.RuneCountInString(line) <= titleMax &&
-			(utils.CheckTitle(line) || utils.CheckVol(line) || utils.CheckEnd(line)) {
+			(reg.CheckTitle(line) || reg.CheckVol(line) || reg.CheckEnd(line)) {
 			if title == "" {
 				title = unknownTitle
 			}
 			if content.Len() > 0 || title != unknownTitle {
-				contentList = append(contentList, models.Chapter{
+				contentList = append(contentList, models.Section{
 					Title:   title,
 					Content: content.String(),
 				})
@@ -139,7 +139,7 @@ func (t *TxtSource) GetBook(ef *formatter.EpubFormat) error {
 			continue
 		}
 		if line == "（全书完）" {
-			contentList = append(contentList, models.Chapter{
+			contentList = append(contentList, models.Section{
 				Title:   title,
 				Content: content.String(),
 			})
@@ -153,18 +153,18 @@ func (t *TxtSource) GetBook(ef *formatter.EpubFormat) error {
 		if title == "" {
 			title = "章节正文"
 		}
-		contentList = append(contentList, models.Chapter{
+		contentList = append(contentList, models.Section{
 			Title:   title,
 			Content: content.String(),
 		})
 	}
-	ef.BookConf.Chapters = contentList
+	ef.Sections = contentList
 	err := ef.InitBook()
 	if err != nil {
 		return err
 	}
 	var volPath string
-	for i := range ef.BookConf.Chapters {
+	for i := range ef.Sections {
 		volPath, err = ef.GenBookContent(i, volPath)
 	}
 	err = ef.Build()

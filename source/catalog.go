@@ -1,170 +1,112 @@
 package source
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
+	"freb/config"
 	"freb/formatter"
 	"freb/models"
 	"freb/utils"
-	"freb/utils/stdout"
-	"github.com/PuerkitoBio/goquery"
-	"golang.org/x/text/transform"
+	"freb/utils/htmlx"
+	"freb/utils/reg"
+	"github.com/antchfx/htmlquery"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"strings"
 )
 
-type ScrapyConfig struct {
-	Trans      transform.Transformer
-	Catalog    string
-	VolName    string
-	VolFunc    func(*goquery.Selection) string
-	Chapter    string
-	NeedCookie bool
-	IsJSON     bool
-	Api        string
-}
-
-var (
-	selectMap = map[string]ScrapyConfig{
-		"qidian": {
-			Trans:   transform.Nop,
-			Catalog: ".volume-wrap",
-			VolName: ".volume h3",
-			Chapter: ".book_name a",
-			Api:     "https://book.qidian.com/info/%s/",
-			VolFunc: func(doc *goquery.Selection) (volName string) {
-				volName = doc.Find(".volume h3").Contents().Not("a").Text()
-				if strings.Contains(volName, "·") {
-					volName = strings.Split(volName, "·")[0]
-				}
-				return
-			},
-		},
-		"fanqienovel": {
-			Trans:   transform.Nop,
-			Catalog: ".page-directory-content",
-			VolName: ".volume",
-			Chapter: ".chapter-item-title",
-		},
-		"qimao": {
-			Trans:  transform.Nop,
-			IsJSON: true,
-			Api:    "https://www.qimao.com/api/book/chapter-list?book_id=%s",
-		},
-	}
-	// exclude vols and chapters
-	passVols = []string{"第三方", "作品相关", "闲言碎语"}
-	// exclude vols but include chapters
-	excludeVols = []string{"正文", "VIP"}
-)
-
 func GetCatalogFromUrl(ef *formatter.EpubFormat) (err error) {
-	var checkConfig ScrapyConfig
-	for domain, config := range selectMap {
-		if strings.Contains(ef.Catalog.Url, domain) {
-			checkConfig = config
+	var checkConfig *models.InfoSelector
+	for domain, conf := range config.Cfg.InfoSelector {
+		if strings.Contains(ef.Catalog, domain) {
+			checkConfig = conf
 			break
 		}
 	}
+	if checkConfig == nil {
+		return fmt.Errorf("未匹配目录来源: %s", ef.Catalog)
+	}
 	if checkConfig.Api != "" {
-		ef.Catalog.Url = fmt.Sprintf(checkConfig.Api, utils.GetNum(ef.Catalog.Url))
+		ef.Catalog = fmt.Sprintf(checkConfig.Api, reg.GetNum(ef.Catalog))
 	}
-	req := utils.GetWithUserAgent(ef.Catalog.Url)
-	if ef.Catalog.Cookie != "" {
-		req.Header.Set("Cookie", ef.Catalog.Cookie)
-	} else if CheckCookie(ef.Catalog.Url) {
-		return errors.New("cookie is required")
-	}
+	req := utils.GetWithUserAgent(ef.Catalog)
 	if !checkConfig.IsJSON {
 		err = GetCatalogByHTML(ef, checkConfig, req)
 		return
 	}
-	err = GetCatalogByJSON(ef, req)
+	err = GetCatalogByJSON(ef, checkConfig, req)
 	return
 }
 
-func GetCatalogByHTML(ef *formatter.EpubFormat, config ScrapyConfig, req *http.Request) error {
-	doc, err := utils.TransDom2Doc(req, config.Trans)
+func GetCatalogByHTML(ef *formatter.EpubFormat, conf *models.InfoSelector, req *http.Request) error {
+	doc, err := utils.TransDom2Doc(req)
 	if err != nil {
 		return err
 	}
-	doc.Find(config.Catalog).Children().Each(func(i int, s *goquery.Selection) {
-		// filter vol
-		var vol string
-		if config.VolFunc != nil {
-			vol = config.VolFunc(s)
-		} else {
-			vol = strings.TrimSpace(s.Find(config.VolName).Contents().First().Text())
-		}
-		for _, pass := range passVols {
+	nodes := htmlquery.Find(doc, conf.Catalog)
+VOL:
+	for _, node := range nodes {
+		vol := strings.TrimSpace(htmlx.XPathFindStr(node, conf.VolName))
+		for _, pass := range conf.PassVols {
 			if strings.Contains(vol, pass) {
-				return
+				continue VOL
 			}
 		}
 		var isExcludeVol bool
-		for _, exclude := range excludeVols {
+		for _, exclude := range conf.ExcludeVols {
 			if strings.Contains(vol, exclude) {
 				isExcludeVol = true
 				break
 			}
 		}
 		if !isExcludeVol {
-			ef.BookConf.Chapters = append(ef.BookConf.Chapters, models.Chapter{Title: vol, IsVol: true})
+			ef.Sections = append(ef.Sections, models.Section{Title: vol, IsVol: true})
+			conf.ExcludeVols = append(conf.ExcludeVols, vol)
 		}
-		s.Find(config.Chapter).Each(func(j int, ss *goquery.Selection) {
-			ef.BookConf.Chapters = append(ef.BookConf.Chapters, models.Chapter{Title: ss.Text()})
-		})
-
-	})
+		for _, subNode := range htmlquery.Find(node, conf.Chapter) {
+			ef.Sections = append(ef.Sections, models.Section{Title: htmlquery.InnerText(subNode)})
+		}
+	}
 	return nil
 }
 
-func CheckCookie(url string) bool {
-	for domain, config := range selectMap {
-		if strings.Contains(url, domain) {
-			if config.NeedCookie {
-				return true
-			} else {
-				return false
-			}
-		}
-	}
-	return false
-}
-
-type QiMaoData struct {
-	Chapters []struct {
-		Title string `json:"title"`
-	}
-}
-
-type QiMaoJson struct {
-	Data QiMaoData
-}
-
-func GetCatalogByJSON(ef *formatter.EpubFormat, req *http.Request) (err error) {
-	if !utils.CheckUrl(ef.Catalog.Url) {
-		return errors.New(stdout.ErrUrl)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New(resp.Status)
-	}
-	defer resp.Body.Close()
-
-	var qmChapters QiMaoJson
-	err = json.NewDecoder(resp.Body).Decode(&qmChapters)
+func GetCatalogByJSON(ef *formatter.EpubFormat, conf *models.InfoSelector, req *http.Request) (err error) {
+	var rest gjson.Result
+	rest, err = utils.TransDom2JSON(req)
 	if err != nil {
 		return
 	}
+	if conf.Catalog != "" {
+		nodes := rest.Get(conf.Catalog).Array()
+	VOL:
+		for _, node := range nodes {
+			vol := strings.TrimSpace(node.Get(conf.VolName).String())
+			for _, pass := range conf.PassVols {
+				if strings.Contains(vol, pass) {
+					continue VOL
+				}
+			}
+			var isExcludeVol bool
+			for _, exclude := range conf.ExcludeVols {
+				if strings.Contains(vol, exclude) {
+					isExcludeVol = true
+					break
+				}
+			}
+			if !isExcludeVol {
+				ef.Sections = append(ef.Sections, models.Section{Title: vol, IsVol: true})
+				conf.ExcludeVols = append(conf.ExcludeVols, vol)
+			}
+			for _, subNode := range node.Get(conf.Chapter).Array() {
+				ef.Sections = append(ef.Sections, models.Section{Title: subNode.String()})
+			}
+		}
+		return nil
 
-	ef.Chapters = make([]models.Chapter, len(qmChapters.Data.Chapters))
-	for i := range qmChapters.Data.Chapters {
-		ef.Chapters[i] = models.Chapter{Title: qmChapters.Data.Chapters[i].Title}
+	}
+	chpts := rest.Get(conf.Chapter).Array()
+	ef.Sections = make([]models.Section, len(chpts))
+	for i, chpt := range chpts {
+		ef.Sections[i] = models.Section{Title: chpt.String()}
 	}
 	return
 }

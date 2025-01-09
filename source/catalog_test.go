@@ -11,12 +11,10 @@ import (
 
 func TestGetCatalog(t *testing.T) {
 	var ef formatter.EpubFormat
-	err := config.InitConfig(&models.BookCatch{})
+	err := config.InitConfig()
 	if err != nil {
 		t.Error(err)
 	}
-	spew.Dump(config.Cfg)
-	return
 
 	t.Run("七猫", func(t *testing.T) {
 		ef.BookConf = &models.BookConf{

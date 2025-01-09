@@ -73,13 +73,19 @@ func TransDom2JSON(req *http.Request) (rest gjson.Result, err error) {
 	return gjson.ParseBytes(body), nil
 }
 
+const reqErr = "请求失败: %s"
+
 func TransDom2Bytes(req *http.Request) (body []byte, err error) {
-	if !reg.CheckUrl(req.URL.String()) {
+	url := req.URL.String()
+	if !reg.CheckUrl(url) {
 		return nil, errors.New(stdout.ErrUrl)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+	if resp == nil {
+		return nil, fmt.Errorf(reqErr, url)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("爬取错误:%s %s", req.URL.String(), resp.Status)

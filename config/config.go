@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"freb/models"
 	"freb/utils"
-	"freb/utils/reg"
 	"freb/utils/stdout"
 	"github.com/pelletier/go-toml"
 	"net/http"
@@ -18,7 +17,7 @@ const (
 	cfgErr  = "初始化配置文件错误: %s"
 )
 
-func InitConfig(catch *models.BookCatch) (err error) {
+func InitConfig() (err error) {
 	initConfig()
 	Cfg.TmpDir = os.TempDir()
 	var source string
@@ -41,9 +40,6 @@ func InitConfig(catch *models.BookCatch) (err error) {
 	if err != nil {
 		return fmt.Errorf(cfgErr, err)
 	}
-
-	reg.InitTitleReg(catch.Title.Filter)
-	reg.InitContentReg(catch.Content.Filter)
 	return nil
 }
 

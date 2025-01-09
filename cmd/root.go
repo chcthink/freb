@@ -69,17 +69,16 @@ var rootCmd = &cobra.Command{
 		if len(args) > 0 {
 			path = args[0]
 		}
+		err := config.InitConfig()
+		if err != nil {
+			stdout.Errln(fmt.Errorf("配置错误: %v", err))
+			return
+		}
 		bookCatch, err := CheckFlag(cmd, path)
 		if err != nil {
 			stdout.Errln(err)
 			return
 		}
-		err = config.InitConfig(bookCatch)
-		if err != nil {
-			stdout.Errln(fmt.Errorf("配置错误: %v", err))
-			return
-		}
-
 		var source source.Source
 		if len(ef.BookConf.Url) > 0 {
 			source = &sources.UrlSource{}
@@ -95,6 +94,8 @@ var rootCmd = &cobra.Command{
 			stdout.Errln(err)
 			return
 		}
+		reg.InitTitleReg(bookCatch.Title.Filter)
+		reg.InitContentReg(bookCatch.Content.Filter)
 
 		err = source.GetBook(&ef, bookCatch)
 		if err != nil {
@@ -132,6 +133,7 @@ func CheckFlag(cmd *cobra.Command, cmdPath string) (bookCatch *models.BookCatch,
 		for domain, catch := range config.Cfg.BookCatch {
 			if strings.Contains(ef.BookConf.Url, domain) {
 				bookCatch = catch
+				bookCatch.Domain = domain
 				return
 			}
 		}
@@ -150,17 +152,20 @@ func InitAssets(ef formatter.EpubFormat, bookCatch *models.BookCatch) (err error
 	ef.Inner.Cover, err = utils.SetImage(ef.Cover, config.Cfg.TmpDir, ef.Inner.Cover, config.Cfg.From, func() *http.Request {
 		var req *http.Request
 		if len(ef.BookConf.Url) > 0 {
+			var url, id string
+			id, err = reg.MatchString(bookCatch.ID, ef.BookConf.Url)
+			if err != nil {
+				return nil
+			}
 			if bookCatch.Cover.NeedDivide {
-				var id string
-				id, err = reg.MatchString(bookCatch.ID, ef.BookConf.Url)
-				if err != nil {
-					return nil
-				}
-				req = utils.GetWithUserAgent(utils.DivideThousandURL(bookCatch.Cover.Url, id))
+				url = utils.DivideThousandURL(bookCatch.Cover.Url, id)
 				for header, value := range bookCatch.Cover.Header {
 					req.Header.Set(header, value)
 				}
+			} else {
+				url = fmt.Sprintf(bookCatch.Cover.Url, id)
 			}
+			req = utils.GetWithUserAgent(url)
 			return req
 		}
 		return nil

@@ -43,21 +43,42 @@ func GetCatalogByHTML(ef *formatter.EpubFormat, conf *models.InfoSelector, req *
 		return err
 	}
 	nodes := htmlquery.Find(doc, conf.Catalog)
+	var isContinue bool
 VOL:
-	for _, node := range nodes {
-		vol := strings.TrimSpace(htmlx.XPathFindStr(node, conf.VolName))
+	for i, node := range nodes {
+		var vol string
+		vol, err = htmlx.XPathFindStr(node, conf.VolName)
+		if err != nil {
+			return err
+		}
+		// avoid filter exclude vol name when normal vol name  follow exclude vol name
+		if i == 0 {
+			var secVol string
+			secVol, err = htmlx.XPathFindStr(nodes[len(nodes)-1], conf.VolName)
+			if err != nil {
+				return err
+			}
+			if secVol != vol {
+				isContinue = true
+			}
+		}
 		for _, pass := range conf.PassVols {
 			if strings.Contains(vol, pass) {
 				continue VOL
 			}
 		}
 		var isExcludeVol bool
-		for _, exclude := range conf.ExcludeVols {
-			if strings.Contains(vol, exclude) {
-				isExcludeVol = true
-				break
+		if isContinue {
+			isExcludeVol = true
+		} else {
+			for _, exclude := range conf.ExcludeVols {
+				if strings.Contains(vol, exclude) {
+					isExcludeVol = true
+					break
+				}
 			}
 		}
+
 		if !isExcludeVol {
 			ef.Sections = append(ef.Sections, models.Section{Title: vol, IsVol: true})
 			conf.ExcludeVols = append(conf.ExcludeVols, vol)

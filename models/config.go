@@ -30,16 +30,18 @@ type ChapterFilter struct {
 }
 
 type BookCatch struct {
-	Cover   UrlWithHeader
-	Name    BookFilter
-	ID      string
-	Toc     string
-	Sort    string
-	Title   BookFilter
-	Author  BookFilter
-	Intro   BookFilter
-	Chapter ChapterFilter
-	Content BookFilter
+	Domain    string
+	DelayTime int `toml:"delay_time"`
+	Cover     UrlWithHeader
+	Name      BookFilter
+	ID        string
+	Toc       string
+	Sort      string
+	Title     BookFilter
+	Author    BookFilter
+	Intro     BookFilter
+	Chapter   ChapterFilter
+	Content   BookFilter
 }
 
 type InfoSelector struct {

@@ -46,9 +46,12 @@ func getCatalog(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatc
 		isCatalog = true
 	}
 
-	tocUrl := htmlx.XPathFindStr(doc, catch.Toc)
+	tocUrl, err := htmlx.XPathFindStr(doc, catch.Toc)
+	if err != nil {
+		return
+	}
 	if !reg.CheckUrl(tocUrl) {
-		tocUrl = strings.Join([]string{ef.BookConf.Url, tocUrl}, "")
+		tocUrl = strings.Join([]string{catch.Domain, tocUrl}, "")
 	}
 
 	doc, err = utils.GetDomByDefault(tocUrl)
@@ -56,7 +59,8 @@ func getCatalog(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatc
 		return err
 	}
 	var isReverse bool
-	if sorting := htmlx.XPathFindStr(doc, catch.Sort); strings.Contains(sorting, "倒序") {
+	var sorting string
+	if sorting, err = htmlx.XPathFindStr(doc, catch.Sort); strings.Contains(sorting, "倒序") {
 		isReverse = true
 	}
 	chapters := htmlquery.Find(doc, catch.Chapter.Element)
@@ -68,7 +72,7 @@ func getCatalog(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatc
 	if total <= 0 {
 		return errors.New("跳过章节数[flag -j(jump)] 大于总章数")
 	}
-	htmlx.XpPathAscEach(chapters, func(i int, s *html.Node) {
+	htmlx.XPathAscEach(chapters, func(i int, s *html.Node) {
 		if i < ef.BookConf.Jump {
 			return
 		}
@@ -76,11 +80,19 @@ func getCatalog(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatc
 			ef.Sections = make([]models.Section, total)
 		}
 
-		url := htmlx.XPathFindStr(s, catch.Chapter.Url)
-		if !reg.CheckUrl(url) {
-			tocUrl = strings.Join([]string{ef.BookConf.Url, url}, "")
+		var url string
+		url, err = htmlx.XPathFindStr(s, catch.Chapter.Url)
+		if err != nil {
+			return
 		}
-		title := htmlx.XPathFindStr(s, catch.Chapter.Title)
+		if !reg.CheckUrl(url) {
+			url = strings.Join([]string{catch.Domain, url}, "")
+		}
+		var title string
+		title, err = htmlx.XPathFindStr(s, catch.Chapter.Title)
+		if err != nil {
+			return
+		}
 
 		if isCatalog {
 			chapterIndex = setChapterUrl(chapterIndex, strings.TrimSpace(title), url, ef)
@@ -129,17 +141,26 @@ func getCatalog(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatc
 
 func (u *UrlSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) (err error) {
 	start := time.Now()
+	stdout.Warnf("爬取站点: %s\n", ef.BookConf.Url)
 	doc, err := utils.GetDomByDefault(ef.BookConf.Url)
 	if err != nil {
 		return err
 	}
-
 	// get book basic info
-	ef.Name = htmlx.XPathFindStr(doc, catch.Name.Selector)
-	if ef.Author == "Unknown" {
-		ef.Author = htmlx.XPathFindStr(doc, catch.Author.Selector)
+	ef.Name, err = htmlx.XPathFindStr(doc, catch.Name.Selector)
+	if err != nil {
+		return
 	}
-	ef.Intro = htmlx.XPathFindStr(doc, catch.Intro.Selector)
+	if ef.Author == "Unknown" {
+		ef.Author, err = htmlx.XPathFindStr(doc, catch.Author.Selector)
+		if err != nil {
+			return
+		}
+	}
+	ef.Intro, err = htmlx.XPathFindStr(doc, catch.Intro.Selector)
+	if err != nil {
+		return
+	}
 	ef.Intro, err = reg.Filters(catch.Intro.Filter, ef.Intro)
 	if err != nil {
 		return
@@ -158,6 +179,10 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) (
 	}
 	// contents
 	stdout.Fmtln("正在添加章节...")
+	delay := ef.Delay
+	if catch.DelayTime >= 0 {
+		delay = catch.DelayTime
+	}
 	var volPath string
 	for i, chapter := range ef.Sections {
 		if chapter.Url == "" {
@@ -167,9 +192,15 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) (
 		if err != nil {
 			return
 		}
+
 		node := htmlquery.Find(doc, catch.Content.Selector)
 
-		if htmlx.XPathFindStr(doc, catch.Title.Selector) == "" {
+		var check string
+		check, err = htmlx.XPathFindStr(doc, catch.Title.Selector)
+		if err != nil {
+			return
+		}
+		if check == "" {
 			return fmt.Errorf("当前章节爬取错误: %s %s", chapter.Title, chapter.Url)
 		}
 
@@ -207,7 +238,10 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) (
 		if err != nil {
 			return
 		}
-		time.Sleep(time.Duration(ef.Delay) * time.Millisecond)
+
+		if delay > 0 {
+			time.Sleep(time.Duration(delay) * time.Millisecond)
+		}
 	}
 	err = ef.Build()
 	if err != nil {

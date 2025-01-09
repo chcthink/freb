@@ -1,15 +1,23 @@
 package htmlx
 
 import (
+	"fmt"
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
+	"strings"
 )
 
-func XPathFindStr(node *html.Node, expr string) string {
-	return htmlquery.InnerText(htmlquery.FindOne(node, expr))
+const exprErr = "无法解析 xpath或请求异常\nxpath: %s \nhtml: %s"
+
+func XPathFindStr(node *html.Node, expr string) (string, error) {
+	dest := htmlquery.FindOne(node, expr)
+	if dest == nil {
+		return "", fmt.Errorf(exprErr, expr, fmt.Sprintf("%q", node.Data))
+	}
+	return strings.TrimSpace(htmlquery.InnerText(dest)), nil
 }
 
-func XpPathAscEach(nodes []*html.Node, f func(int, *html.Node), isReverse bool) {
+func XPathAscEach(nodes []*html.Node, f func(int, *html.Node), isReverse bool) {
 	if isReverse {
 		total := len(nodes)
 		for i := total - 1; i >= 0; i-- {
@@ -20,11 +28,4 @@ func XpPathAscEach(nodes []*html.Node, f func(int, *html.Node), isReverse bool) 
 			f(i, nodes[i])
 		}
 	}
-}
-
-func iterateChildNodes(node *html.Node) (dest []*html.Node) {
-	for child := node.FirstChild; child != nil; child = child.NextSibling {
-		dest = append(dest, child)
-	}
-	return
 }

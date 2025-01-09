@@ -1,6 +1,6 @@
 # 配置文件
 # 每章延迟 800 毫秒爬取
-delay_time = 800
+delay_time = 1500
 # 静态文件远程获取 url
 from = 'https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/'
 # ----- 爬取站点配置 catalog ------ #
@@ -10,7 +10,8 @@ from = 'https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/head
 cover.url = 'https://69shuba.cx/fengmian/%s/%s/%ss.jpg'
 cover.header."Referer" = 'https://69shuba.cx/modules/article/search.php'
 cover.need_divide = true
-id = '\d+(?=/$)'
+id = '\d+(?=.htm$)'
+delay_time = 300
 name.selector = '//div[@class="booknav2"]/h1/a'
 toc = '//a[contains(@class,"more-btn")]/@href'
 sort = '//div[@class="sorting"]/a[@style]'
@@ -20,13 +21,14 @@ chapter.element = '//div[@id="catalog"]//li'
 chapter.title = '//a/text()'
 chapter.url = '//a/@href'
 title.selector = '//div[@class="txtnav"]/h1'
-content.selector = '//div[@class="txtnav"]//text()[normalize-space() and not(parent::script) and not(parent::span) and not(normalize-space() = normalize-space(//h1/text())) and not(normalize-space() = "(本章完)")]'
+content.selector = '//div[@class="txtnav"]/node()[normalize-space()][not(child::script)][not(child::span)][not(normalize-space() = normalize-space(//h1/text()))][not(normalize-space() = "(本章完)")]'
 content.filter = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
 
 [book_catch.'https://www.69yuedu.net']
 cover.url = 'https://www.69yuedu.net/files/article/image/%s/cover.jpg'
 cover.header."Referer" = 'https://www.69yuedu.net/modules/article/search.php'
 id = '[a-z]+(?=.html$)'
+delay_time = 1500
 name.selector = '//div[@class="booknav2"]/h1/a'
 author.selector = '//div[@class="booknav2"]/p/a[contains(@href,"author")]'
 intro.selector = '//div[@class="navtxt"]/p[1]'
@@ -36,7 +38,7 @@ chapter.element = '//div[@id="chapters"]//li'
 chapter.title = '//a/text()'
 chapter.url = '//a/@href'
 title.selector = '//div[@class="txtbox"]/h1'
-content.selector = '//div[@class="content"]//text()[normalize-space() and not(parent::script) and not(parent::span) and not(normalize-space() = normalize-space(//h1/text())) and not(normalize-space() = "(本章完)")]'
+content.selector = '//div[@class="content"]/node()[normalize-space()][not(child::script)][not(child::span)][not(normalize-space() = normalize-space(//h1/text()))][not(normalize-space() = "(本章完)")]'
 content.filter = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
 # ----- 参照信息配置 catalog ------ #
 [info_selector]

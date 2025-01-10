@@ -1,11 +1,12 @@
 # 配置文件
+
+# 全局配置
 # 每章延迟 800 毫秒爬取
 delay_time = 1500
 # 静态文件远程获取 url
 from = 'https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/'
 # ----- 爬取站点配置 catalog ------ #
 [book_catch]
-
 [book_catch.'https://69shuba.cx']
 cover.url = 'https://69shuba.cx/fengmian/%s/%s/%ss.jpg'
 cover.header."Referer" = 'https://69shuba.cx/modules/article/search.php'

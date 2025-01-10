@@ -47,7 +47,7 @@ func (e *EpubFormat) Init() {
 	e.AssetsPath = &models.AssetsPath{}
 }
 
-func (e *EpubFormat) InitBook() (err error) {
+func (e *EpubFormat) InitEPub() (err error) {
 	e.Epub, err = epub.NewEpub(e.Name)
 	if err != nil {
 		stdout.Errln(err)

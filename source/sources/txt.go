@@ -159,7 +159,7 @@ func (t *TxtSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) e
 		})
 	}
 	ef.Sections = contentList
-	err := ef.InitBook()
+	err := ef.InitEPub()
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (t *TxtSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) e
 	if err != nil {
 		return err
 	}
-	end := time.Now().Sub(start)
+	end := time.Since(start).Truncate(time.Second).String()
 	stdout.Successfln("\n已生成书籍,使用时长: %s", end)
 	return nil
 }

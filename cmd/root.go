@@ -94,8 +94,6 @@ var rootCmd = &cobra.Command{
 			stdout.Errln(err)
 			return
 		}
-		reg.InitTitleReg(bookCatch.Title.Filter)
-		reg.InitContentReg(bookCatch.Content.Filter)
 
 		err = source.GetBook(&ef, bookCatch)
 		if err != nil {
@@ -134,6 +132,8 @@ func CheckFlag(cmd *cobra.Command, cmdPath string) (bookCatch *models.BookCatch,
 			if strings.Contains(ef.BookConf.Url, domain) {
 				bookCatch = catch
 				bookCatch.Domain = domain
+				reg.InitTitleReg(bookCatch.Title.Filter)
+				reg.InitContentReg(bookCatch.Content.Filter)
 				return
 			}
 		}

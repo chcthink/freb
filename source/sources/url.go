@@ -19,6 +19,51 @@ import (
 type UrlSource struct {
 }
 
+func (u *UrlSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) (err error) {
+	start := time.Now()
+	stdout.Warnf("爬取站点: %s\n", ef.BookConf.Url)
+	doc, err := utils.GetDomByDefault(ef.BookConf.Url)
+	if err != nil {
+		return err
+	}
+
+	// get book basic info
+	err = InitBookBaseInfo(ef, doc, catch)
+	if err != nil {
+		return
+	}
+
+	// get chapters
+	stdout.Fmtln("正在获取目录信息...")
+	err = getCatalog(ef, doc, catch)
+	if err != nil {
+		return err
+	}
+	stdout.Fmtfln("章节数: %d", len(ef.Sections))
+
+	// init base info and add assets file in epub
+	err = ef.InitEPub()
+	if err != nil {
+		return err
+	}
+
+	// contents
+	stdout.Fmtln("正在添加章节...")
+	err = SetSections(ef, doc, catch)
+	if err != nil {
+		return
+	}
+
+	err = ef.Build()
+	if err != nil {
+		return
+	}
+
+	totalTime := time.Since(start).Truncate(time.Second).String()
+	stdout.Successfln("\n已生成书籍,使用时长: %s", totalTime)
+	return
+}
+
 func setChapterUrl(i int, title, url string, ef *formatter.EpubFormat) (index int) {
 	index = i
 	if index < len(ef.Sections) {
@@ -139,14 +184,7 @@ func getCatalog(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatc
 	return
 }
 
-func (u *UrlSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) (err error) {
-	start := time.Now()
-	stdout.Warnf("爬取站点: %s\n", ef.BookConf.Url)
-	doc, err := utils.GetDomByDefault(ef.BookConf.Url)
-	if err != nil {
-		return err
-	}
-	// get book basic info
+func InitBookBaseInfo(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatch) (err error) {
 	ef.Name, err = htmlx.XPathFindStr(doc, catch.Name.Selector)
 	if err != nil {
 		return
@@ -165,20 +203,10 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) (
 	if err != nil {
 		return
 	}
+	return
+}
 
-	// chapter
-	stdout.Fmtln("正在获取目录信息...")
-	err = getCatalog(ef, doc, catch)
-	if err != nil {
-		return err
-	}
-	stdout.Fmtfln("章节数: %d", len(ef.Sections))
-	err = ef.InitBook()
-	if err != nil {
-		return err
-	}
-	// contents
-	stdout.Fmtln("正在添加章节...")
+func SetSections(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatch) (err error) {
 	delay := ef.Delay
 	if catch.DelayTime >= 0 {
 		delay = catch.DelayTime
@@ -243,12 +271,5 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) (
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 		}
 	}
-	err = ef.Build()
-	if err != nil {
-		return
-	}
-
-	totalTime := time.Since(start).Truncate(time.Second).String()
-	stdout.Successfln("\n已生成书籍,使用时长: %s", totalTime)
 	return
 }

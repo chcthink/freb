@@ -1,13 +1,9 @@
 package cmd
 
 import (
+	"freb/models"
 	"freb/utils/stdout"
 	"github.com/spf13/cobra"
-)
-
-// vars below are set by '-X'
-var (
-	version = "dev"
 )
 
 func init() {
@@ -18,6 +14,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "版本",
 	Run: func(cmd *cobra.Command, args []string) {
-		stdout.SysInfofln("version: %s", version)
+		stdout.SysInfofln("version: %s", models.Version)
 	},
 }

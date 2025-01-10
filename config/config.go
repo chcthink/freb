@@ -2,55 +2,33 @@ package config
 
 import (
 	"fmt"
+	"freb/models"
 	"freb/utils"
+	"freb/utils/stdout"
 	"github.com/pelletier/go-toml"
+	"net/http"
 	"os"
 )
 
-type Page struct {
-	Title string
-	Dom   string
-}
-
-type Style struct {
-	Instruction Page
-	Desc        Page
-	Vol         string
-	Chapter     string
-}
-
-type Selector struct {
-	Title  string
-	Author string
-	Intro  string
-}
-
-type Remove struct {
-	Title   []string `toml:"title"`
-	Intro   []string `toml:"intro"`
-	Content []string `toml:"content"`
-}
-
-type Config struct {
-	*Style
-	*Selector
-	TmpDir    string `toml:"-"`
-	DelayTime int    `toml:"delay_time"`
-	Cookies   map[string]string
-	*Remove
-}
-
-var Cfg Config
+var Cfg models.Config
 
 const (
 	cfgPath = "config.toml"
 	cfgErr  = "初始化配置文件错误: %s"
 )
 
-func GetConfig() error {
+func InitConfig() (err error) {
 	initConfig()
 	Cfg.TmpDir = os.TempDir()
-	source, err := utils.LocalOrDownload(cfgPath, Cfg.TmpDir)
+	var source string
+	if Cfg.From != "" {
+		stdout.Fmtfln("正在从远程仓库下载文件: %s", Cfg.From)
+		source, err = utils.DownloadTmp(Cfg.TmpDir, cfgPath, func() *http.Request {
+			return utils.GetWithUserAgent(Cfg.From)
+		})
+	} else {
+		source, err = utils.LocalOrDownload(cfgPath, Cfg.TmpDir, Cfg.From)
+	}
 	if err != nil {
 		return fmt.Errorf(cfgErr, err)
 	}
@@ -62,13 +40,10 @@ func GetConfig() error {
 	if err != nil {
 		return fmt.Errorf(cfgErr, err)
 	}
-	utils.InitRemoveReg(Cfg.Remove.Title, "title")
-	utils.InitRemoveReg(Cfg.Remove.Intro, "intro")
-	utils.InitRemoveReg(Cfg.Remove.Content, "content")
 	return nil
 }
 
 func initConfig() {
-	Cfg.Cookies = make(map[string]string)
-	Cfg.Remove = &Remove{}
+	Cfg.BookCatch = make(map[string]*models.BookCatch)
+	Cfg.InfoSelector = make(map[string]*models.InfoSelector)
 }

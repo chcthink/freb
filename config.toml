@@ -1,14 +1,66 @@
 # 配置文件
+
+# 全局配置
 # 每章延迟 800 毫秒爬取
-delay_time = 800
-# ----- 参考目录配置 catalog ------ #
-[cookies]
-qidian = ""
-# ---- 排除文章广告 字段正则匹配----- #
-[remove]
-title = []
-intro = []
-content = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
+delay_time = 1500
+# 静态文件远程获取 url
+from = 'https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/'
+# ----- 爬取站点配置 catalog ------ #
+[book_catch]
+[book_catch.'https://69shuba.cx']
+cover.url = 'https://69shuba.cx/fengmian/%s/%s/%ss.jpg'
+cover.header."Referer" = 'https://69shuba.cx/modules/article/search.php'
+cover.need_divide = true
+id = '\d+(?=.htm$)'
+delay_time = 300
+name.selector = '//div[@class="booknav2"]/h1/a'
+toc = '//a[contains(@class,"more-btn")]/@href'
+sort = '//div[@class="sorting"]/a[@style]'
+author.selector = '//div[@class="booknav2"]/p/a[contains(@href,"author")]'
+intro.selector = '//div[@class="content"]/p'
+chapter.element = '//div[@id="catalog"]//li'
+chapter.title = '//a/text()'
+chapter.url = '//a/@href'
+title.selector = '//div[@class="txtnav"]/h1'
+content.selector = '//div[@class="txtnav"]/node()[normalize-space()][not(child::script)][not(child::span)][not(normalize-space() = normalize-space(//h1/text()))][not(normalize-space() = "(本章完)")]'
+content.filter = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
+
+[book_catch.'https://www.69yuedu.net']
+cover.url = 'https://www.69yuedu.net/files/article/image/%s/cover.jpg'
+cover.header."Referer" = 'https://www.69yuedu.net/modules/article/search.php'
+id = '[a-z]+(?=.html$)'
+delay_time = 1500
+name.selector = '//div[@class="booknav2"]/h1/a'
+author.selector = '//div[@class="booknav2"]/p/a[contains(@href,"author")]'
+intro.selector = '//div[@class="navtxt"]/p[1]'
+toc = '//a[@class="btn"][1]/@href'
+sort = '//div[@class="sorting"]/a[@style]'
+chapter.element = '//div[@id="chapters"]//li'
+chapter.title = '//a/text()'
+chapter.url = '//a/@href'
+title.selector = '//div[@class="txtbox"]/h1'
+content.selector = '//div[@class="content"]/node()[normalize-space()][not(child::script)][not(child::span)][not(normalize-space() = normalize-space(//h1/text()))][not(normalize-space() = "(本章完)")]'
+content.filter = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
+# ----- 参照信息配置 catalog ------ #
+[info_selector]
+
+[info_selector.qidian]
+catalog = '//div[@class="volume"]'
+vol_name = '//h3/text()[2]'
+chapter = '//h2[@class="book_name"]/a/text()'
+api = 'https://book.qidian.com/info/%s/'
+pass_vols = ['第三方','作品相关','闲言碎语']
+exclude_vols = ['正文', 'VIP']
+
+[info_selector.fanqienovel]
+catalog = '//div[@class="page-directory-content"]/div'
+vol_name = '//div[contains(@class,"volume")]/text()[1]'
+chapter = '//a[@class="chapter-item-title"]/text()'
+
+[info_selector.qimao]
+chapter = 'data.chapters.#.title'
+api = 'https://www.qimao.com/api/book/chapter-list?book_id=%s'
+is_json = true
 # ------- EPub内容 HTML --------- #
 # 制作说明
 [style]

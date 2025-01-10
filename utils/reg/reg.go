@@ -1,6 +1,8 @@
-package utils
+package reg
 
 import (
+	"fmt"
+	"github.com/dlclark/regexp2"
 	"regexp"
 	"strings"
 )
@@ -182,25 +184,18 @@ func ReplaceC0Control(str string) string {
 
 var (
 	rmTitleReg   []*regexp.Regexp
-	rmIntroReg   []*regexp.Regexp
 	rmContentReg []*regexp.Regexp
 )
 
-func InitRemoveReg(regs []string, set string) {
-	if set == "title" {
-		for _, reg := range regs {
-			rmTitleReg = append(rmTitleReg, regexp.MustCompile(reg))
-		}
+func InitTitleReg(regs []string) {
+	for _, reg := range regs {
+		rmTitleReg = append(rmTitleReg, regexp.MustCompile(reg))
 	}
-	if set == "intro" {
-		for _, reg := range regs {
-			rmIntroReg = append(rmIntroReg, regexp.MustCompile(reg))
-		}
-	}
-	if set == "content" {
-		for _, reg := range regs {
-			rmContentReg = append(rmContentReg, regexp.MustCompile(reg))
-		}
+}
+
+func InitContentReg(regs []string) {
+	for _, reg := range regs {
+		rmContentReg = append(rmContentReg, regexp.MustCompile(reg))
 	}
 }
 
@@ -214,9 +209,9 @@ func RemoveTitleFromCfg(str string) (dst string) {
 	return
 }
 
-func RemoveIntroFromCfg(str string) (dst string) {
+func RemoveContentFromCfg(str string) (dst string) {
 	dst = str
-	for _, reg := range rmIntroReg {
+	for _, reg := range rmContentReg {
 		if reg.MatchString(dst) {
 			dst = reg.ReplaceAllString(dst, "")
 		}
@@ -224,11 +219,36 @@ func RemoveIntroFromCfg(str string) (dst string) {
 	return
 }
 
-func RemoveContentFromCfg(str string) (dst string) {
-	dst = str
-	for _, reg := range rmContentReg {
-		if reg.MatchString(dst) {
-			dst = reg.ReplaceAllString(dst, "")
+const (
+	reg2MatchErr = "正则匹配异常: %s %s"
+)
+
+func MatchString(exp, str string) (dest string, err error) {
+	match, err := regexp2.MustCompile(exp, regexp2.None).FindStringMatch(str)
+	if err != nil {
+		return "", fmt.Errorf(reg2MatchErr, exp, str)
+	}
+	dest = match.String()
+	return
+}
+
+func Filters(exps []string, str string) (dest string, err error) {
+	if len(exps) == 0 {
+		return str, nil
+	}
+	var regs []*regexp2.Regexp
+	for _, exp := range exps {
+		var reg *regexp2.Regexp
+		reg, err = regexp2.Compile(exp, regexp2.None)
+		if err != nil {
+			return "", fmt.Errorf(reg2MatchErr, exp, str)
+		}
+		regs = append(regs, reg)
+	}
+	dest = str
+	for _, reg := range regs {
+		if isExist, _ := reg.MatchString(dest); isExist {
+			dest, _ = reg.Replace(dest, "", -1, -1)
 		}
 	}
 	return

@@ -22,24 +22,14 @@
 > - 自行配置**正则表达式**,相关语法自行搜索
 > - 由于 golang/regexp 库的问题,正则不支持**非捕获组**
 
-```toml
-# 配置文件
-# 每章延迟 800 毫秒爬取
-delay_time = 800
-# ----- 参考目录配置 catalog ------ #
-[cookies]
-qidian = ""
-# ---- 排除文章广告 字段完全匹配----- #
-[remove]
-title = []
-intro = []
-content = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
-#....
-```
 
 ```shell
+# `-i` 指定爬取的数据介绍页 URL
+./freb -u https://69shuba.cx/book/xxxx.htm
 # `-u` 指定爬取目录的 URL 
 ./freb -u https://www.qidian.com/book/1035420986/
+# `check --chapter` 用于测试章节是否符合正则和 xpath 规则
+./freb check --chapter https://69shuba.cx/book/xxxx.htm
 ```
 
 #### 预览
@@ -52,21 +42,31 @@ content = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
 #### How to use
 
 ```shell
+Usage:
+  freb [flags]
+  freb [command]
+
+Available Commands:
+  check       测试 URL 获取书籍时,正则与 xpath 是否匹配
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  version     版本
+
 Flags:
   -a, --author string   作者 (default "Unknown")
-  -k, --cookie string   章节爬取cookie 起点需要
+  -f, --config string   自定义 config.toml 路径(url或本地文件)
   -c, --cover string    封面路径 (default "cover.jpg")
   -u, --curl string     章节爬取url 支持起点,番茄,七猫
   -t, --delay int       每章延迟毫秒数
   -d, --desc            是否包含制作说明,默认包含,使用 -d 来取消包含 (default true)
   -h, --help            help for freb
-  -i, --id string       下载书本id
   -e, --img string      内容介绍logo (default "intro_logo.jpg")
   -j, --jump int        跳过章节数
   -l, --lang string     默认中文zh-Hans,英文 en (default "zh-Hans")
   -o, --out string      输出文件名
   -p, --path string     转化txt路径
   -s, --sub string      每章标题logo (default "content_logo.jpg")
+  -i, --url string      下载书籍介绍页(包含图片与简介页面) url
   -b, --vol string      卷logo (default "vol.jpg")
 ```
 

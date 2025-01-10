@@ -5,7 +5,6 @@ import (
 	"freb/config"
 	"freb/formatter"
 	"freb/models"
-	"freb/utils"
 	"freb/utils/htmlx"
 	"freb/utils/reg"
 	"github.com/antchfx/htmlquery"
@@ -28,7 +27,7 @@ func GetCatalogFromUrl(ef *formatter.EpubFormat) (err error) {
 	if checkConfig.Api != "" {
 		ef.Catalog = fmt.Sprintf(checkConfig.Api, reg.GetNum(ef.Catalog))
 	}
-	req := utils.GetWithUserAgent(ef.Catalog)
+	req := htmlx.GetWithUserAgent(ef.Catalog)
 	if !checkConfig.IsJSON {
 		err = GetCatalogByHTML(ef, checkConfig, req)
 		return
@@ -38,7 +37,7 @@ func GetCatalogFromUrl(ef *formatter.EpubFormat) (err error) {
 }
 
 func GetCatalogByHTML(ef *formatter.EpubFormat, conf *models.InfoSelector, req *http.Request) error {
-	doc, err := utils.TransDom2Doc(req)
+	doc, err := htmlx.TransDom2Doc(req)
 	if err != nil {
 		return err
 	}
@@ -92,7 +91,7 @@ VOL:
 
 func GetCatalogByJSON(ef *formatter.EpubFormat, conf *models.InfoSelector, req *http.Request) (err error) {
 	var rest gjson.Result
-	rest, err = utils.TransDom2JSON(req)
+	rest, err = htmlx.TransDom2JSON(req)
 	if err != nil {
 		return
 	}

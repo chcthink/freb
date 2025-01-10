@@ -7,7 +7,7 @@ type Section struct {
 	IsVol   bool
 }
 
-type AssetsPath struct {
+type Assets struct {
 	MainCss        string
 	CoverCss       string
 	FontCss        string
@@ -16,12 +16,10 @@ type AssetsPath struct {
 	MetaInf        string
 }
 
-type Inner struct {
+type Images struct {
 	Cover       string
 	ColImg      string
 	IntroImg    string
 	ContentLogo string
 	VolImg      string
-
-	VolIndex int
 }

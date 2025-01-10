@@ -1,10 +1,21 @@
 # 配置文件
 
-# 全局配置
+# ----------- 全局配置 ----------- #
 # 每章延迟 800 毫秒爬取
 delay_time = 1500
 # 静态文件远程获取 url
-from = 'https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/'
+from = 'https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/'
+# 爬取正则规则
+[regs]
+# txt 转化正则
+intro = '(文章|内容)简介([:：])?'
+author = '作者([:：])?'
+end = '大结局|最终话'
+vol = '^第?[0-9一二三四五六七八九十零〇百千两 ]+[卷部]'
+[regs.chapter_title]
+prologue = ['^引子$','^楔子$','^序[章\.:：]?']
+num = ['^章节(目录)?','^第[0-9一二三四五六七八九十零〇百千两 ]+[章回节集卷部]','^\d+[\.:：]?','^[Ss]ection.{1,20}$','^[Cc]hapter.{1,20}$','^[Pp]age.{1,20}$']
+sub_num = '[(（][0-9一二三四五六七八九十零〇百千两上中下 ][)）]'
 # ----- 爬取站点配置 catalog ------ #
 [book_catch]
 [book_catch.'https://69shuba.cx']

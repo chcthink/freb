@@ -81,7 +81,6 @@ var htmlstr = `<div class="txtnav">
         </div>`
 
 func TestContent(t *testing.T) {
-
 	config.InitConfig()
 	var bookCatch *models.BookCatch
 	for domain, catch := range config.Cfg.BookCatch {

@@ -1,5 +1,29 @@
 package models
 
+type Config struct {
+	*Style
+	BookCatch    map[string]*BookCatch    `toml:"book_catch"`
+	InfoSelector map[string]*InfoSelector `toml:"info_selector"`
+	TmpDir       string                   `toml:"-"`
+	DelayTime    int                      `toml:"delay_time"`
+	From         string
+	*Regs
+}
+
+type Regs struct {
+	ChapterTitle *RegTitle `toml:"chapter_title"`
+	Intro        string
+	Vol          string
+	Author       string
+	End          string
+}
+
+type RegTitle struct {
+	Prologue []string
+	Num      []string
+	SubNum   string `toml:"sub_num"`
+}
+
 type Page struct {
 	Title string
 	Dom   string
@@ -42,6 +66,7 @@ type BookCatch struct {
 	Intro     BookFilter
 	Chapter   ChapterFilter
 	Content   BookFilter
+	*Regs
 }
 
 type InfoSelector struct {
@@ -52,13 +77,4 @@ type InfoSelector struct {
 	IsJSON      bool     `toml:"is_json"`
 	PassVols    []string `toml:"pass_vols"`
 	ExcludeVols []string `toml:"exclude_vols"`
-}
-
-type Config struct {
-	*Style
-	BookCatch    map[string]*BookCatch    `toml:"book_catch"`
-	InfoSelector map[string]*InfoSelector `toml:"info_selector"`
-	TmpDir       string                   `toml:"-"`
-	DelayTime    int                      `toml:"delay_time"`
-	From         string
 }

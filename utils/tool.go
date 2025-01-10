@@ -6,7 +6,6 @@ import (
 	"freb/utils/reg"
 	"github.com/adrg/strutil"
 	"github.com/adrg/strutil/metrics"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,50 +41,17 @@ func IsFileInExecDir(path string) (filePath string, isExist bool) {
 	if strings.Contains(models.Version, "dev") {
 		filePath, _ = findProjectRoot()
 		filePath = filepath.Join(filePath, path)
-		return filePath, true
+	} else {
+		execPath, _ := os.Executable()
+		execDir := filepath.Dir(execPath)
+		filePath = filepath.Join(execDir, path)
 	}
-	execPath, _ := os.Executable()
-	execDir := filepath.Dir(execPath)
-	filePath = filepath.Join(execDir, path)
+
 	_, err := os.Stat(filePath)
 	if os.IsNotExist(err) {
 		return
 	}
 	return filePath, true
-}
-
-const (
-	defaultImgDir = "assets/images/"
-)
-
-func SetImage(source, dir, filename, from string, handler func() *http.Request) (path string, err error) {
-	if IsImgFile(source) {
-		if IsFileInWorkDir(source) {
-			path = source
-			return
-		}
-	}
-	if reg.CheckUrl(source) {
-		path, err = DownloadTmp(dir, filename, func() *http.Request {
-			return GetWithUserAgent(source)
-		})
-		if path != "" {
-			return
-		}
-	}
-	if handler != nil {
-		path, err = DownloadTmp(dir, filename, handler)
-		return
-	}
-	if filePath, isExist := IsFileInExecDir(defaultImgDir + filename); isExist {
-		path = filePath
-		return
-	}
-
-	path, err = DownloadTmp(dir, filename, func() *http.Request {
-		return GetWithUserAgent(from + defaultImgDir + filename)
-	})
-	return
 }
 
 const (

@@ -1,9 +1,10 @@
-package utils
+package htmlx
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
+	"freb/utils"
 	"freb/utils/reg"
 	"freb/utils/stdout"
 	"github.com/antchfx/htmlquery"
@@ -29,8 +30,8 @@ const (
 	githubRaw = "https://ghp.ci/https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/"
 )
 
-func LocalOrDownload(path, tmpDir, from string) (source string, err error) {
-	if filePath, isExist := IsFileInExecDir(path); !isExist {
+func LocalOrDownload(path, from, tmpDir string) (source string, err error) {
+	if filePath, isExist := utils.IsFileInExecDir(path); !isExist {
 		if from == "" {
 			from = githubRaw
 		}
@@ -123,7 +124,7 @@ func DownloadTmp(dir, filename string, handler func() *http.Request) (path strin
 		defer resp.Body.Close()
 		// 检查 HTTP 响应状态码
 		if resp.StatusCode != http.StatusOK {
-			err = fmt.Errorf("无法请求地址: %s", resp.Status)
+			err = fmt.Errorf("无法请求地址: %s %s", resp.Status, req.URL.String())
 			return
 		}
 		// 创建文件
@@ -148,4 +149,54 @@ func DivideThousandURL(str, id string) string {
 	bookId, _ := strconv.Atoi(id)
 	mid := strconv.FormatFloat(math.Floor(float64(bookId)/1000.0), 'f', 0, 64)
 	return fmt.Sprintf(str, mid, id, id)
+}
+
+const (
+	incorrectImgErr = "无效的图片格式: %s"
+)
+
+const (
+	defaultImgDir = "assets/images/"
+)
+
+func DownloadWithReq(source, saveDir, remote string, handler func() *http.Request) (path string, err error) {
+	if !utils.IsImgFile(source) {
+		return "", fmt.Errorf(incorrectImgErr, source)
+	}
+
+	// return downloaded img file in temp folder if url correct
+	// or local img file if exist
+	if reg.CheckUrl(source) {
+		path, err = DownloadTmp(saveDir, source, func() *http.Request {
+			return GetWithUserAgent(source)
+		})
+		if path != "" {
+			return
+		}
+	} else {
+		if utils.IsFileInWorkDir(source) {
+			path = source
+			return
+		}
+		var isExist bool
+		if path, isExist = utils.IsFileInExecDir(defaultImgDir + source); isExist {
+			return
+		}
+	}
+	if handler != nil {
+		path, err = DownloadTmp(saveDir, source, handler)
+		return
+	}
+
+	// final get asset from remote dir
+	path, err = DownloadTmp(saveDir, source, func() *http.Request {
+		return GetWithUserAgent(remote + defaultImgDir + source)
+	})
+	if err != nil {
+		return "", err
+	}
+	if path != "" {
+		return
+	}
+	return "", fmt.Errorf(incorrectImgErr, source)
 }

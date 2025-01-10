@@ -31,20 +31,21 @@ type EpubFormat struct {
 	Out    string
 	*epub.Epub
 	*models.BookConf
-	*models.Inner
-	*models.AssetsPath
+	*models.Images
+	*models.Assets
+	VolIndex int
 	Sections []models.Section
 }
 
 func (e *EpubFormat) Init() {
 	e.BookConf = &models.BookConf{}
-	e.Inner = &models.Inner{
+	e.Images = &models.Images{
 		Cover:       "cover.jpg",
 		ContentLogo: "content_logo.jpg",
 		IntroImg:    "intro_logo.jpg",
 		VolImg:      "vol.jpg",
 	}
-	e.AssetsPath = &models.AssetsPath{}
+	e.Assets = &models.Assets{}
 }
 
 func (e *EpubFormat) InitEPub() (err error) {
@@ -57,13 +58,13 @@ func (e *EpubFormat) InitEPub() (err error) {
 	// 初始化书籍信息
 	stdout.Fmtfln("初始化书籍信息:%s", e.Name)
 	// 添加 MainCss
-	e.AssetsPath.MainCss, err = e.AddCSS(e.AssetsPath.MainCss, "main.css")
+	e.Assets.MainCss, err = e.AddCSS(e.Assets.MainCss, "main.css")
 	if err != nil {
 		stdout.Errln(err)
 		return
 	}
-	_, _ = e.AddFont(e.AssetsPath.Font, "font.ttf")
-	_, err = e.AddCSS(e.AssetsPath.FontCss, "fonts.css")
+	_, _ = e.AddFont(e.Assets.Font, "font.ttf")
+	_, err = e.AddCSS(e.Assets.FontCss, "fonts.css")
 	if err != nil {
 		stdout.Errln(err)
 		return
@@ -122,7 +123,7 @@ func (e *EpubFormat) InitEPub() (err error) {
 		if err != nil {
 			return
 		}
-		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Desc.Dom, logo, e.Intro), config.Cfg.Desc.Title, "desc.xhtml", e.AssetsPath.MainCss)
+		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Desc.Dom, logo, e.Intro), config.Cfg.Desc.Title, "desc.xhtml", e.Assets.MainCss)
 		if err != nil {
 			return
 		}
@@ -168,8 +169,8 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 	fmt.Printf("\r[%d/%d]\033[K%s", index+1, len(e.Sections), title)
 	if volNum, volTitle, isVol := reg.VolByDefaultReg(title); isVol {
 		e.VolIndex += 1
-		volPath, err = e.AddSection(fmt.Sprintf(config.Cfg.Vol, e.ColImg, volNum, volTitle),
-			volNum+" "+volTitle, volFilePrefix+strconv.Itoa(e.VolIndex)+".xhtml", e.AssetsPath.MainCss)
+		volPath, err = e.AddSection(fmt.Sprintf(config.Cfg.Style.Vol, e.ColImg, volNum, volTitle),
+			volNum+" "+volTitle, volFilePrefix+strconv.Itoa(e.VolIndex)+".xhtml", e.Assets.MainCss)
 		if err != nil {
 			stdout.Errln(err)
 			return
@@ -181,7 +182,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 	if vol == "" {
 		_, err = e.AddSection(fmt.Sprintf(config.Cfg.Chapter+e.Sections[index].Content,
 			e.ContentLogo, num, name, subNum), strings.Join([]string{num, name, subNum}, " "),
-			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.AssetsPath.MainCss)
+			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.Assets.MainCss)
 		if err != nil {
 			stdout.Errln(err)
 			return
@@ -189,7 +190,7 @@ func (e *EpubFormat) GenBookContent(index int, vol string) (volPath string, err 
 	} else {
 		_, err = e.AddSubSection(vol, fmt.Sprintf(config.Cfg.Chapter+e.Sections[index].Content,
 			e.ContentLogo, num, name, subNum), strings.Join([]string{num, name, subNum}, " "),
-			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.AssetsPath.MainCss)
+			chapterFilePrefix+strconv.Itoa(index+1)+".xhtml", e.Assets.MainCss)
 		if err != nil {
 			stdout.Errln(err)
 			return

@@ -50,3 +50,8 @@ func SysInfofln(str string, a ...interface{}) {
 	outB.Add(color.FgBlue)
 	_, _ = outB.Printf(str+newLine, a...)
 }
+
+func Contentln(str string) {
+	outB.Add(color.FgGreen)
+	_, _ = outB.Println(str)
+}

@@ -3,6 +3,7 @@ package sources
 import (
 	"errors"
 	"fmt"
+	"freb/config"
 	"freb/formatter"
 	"freb/models"
 	"freb/source"
@@ -12,6 +13,7 @@ import (
 	"freb/utils/stdout"
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -22,7 +24,7 @@ type UrlSource struct {
 func (u *UrlSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) (err error) {
 	start := time.Now()
 	stdout.Warnf("爬取站点: %s\n", ef.BookConf.Url)
-	doc, err := utils.GetDomByDefault(ef.BookConf.Url)
+	doc, err := htmlx.GetDomByDefault(ef.BookConf.Url)
 	if err != nil {
 		return err
 	}
@@ -49,7 +51,7 @@ func (u *UrlSource) GetBook(ef *formatter.EpubFormat, catch *models.BookCatch) (
 
 	// contents
 	stdout.Fmtln("正在添加章节...")
-	err = SetSections(ef, doc, catch)
+	err = SetSections(ef, catch)
 	if err != nil {
 		return
 	}
@@ -99,7 +101,7 @@ func getCatalog(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatc
 		tocUrl = strings.Join([]string{catch.Domain, tocUrl}, "")
 	}
 
-	doc, err = utils.GetDomByDefault(tocUrl)
+	doc, err = htmlx.GetDomByDefault(tocUrl)
 	if err != nil {
 		return err
 	}
@@ -195,6 +197,32 @@ func InitBookBaseInfo(ef *formatter.EpubFormat, doc *html.Node, catch *models.Bo
 			return
 		}
 	}
+	ef.Images.Cover, err = htmlx.DownloadWithReq(ef.Images.Cover, config.Cfg.TmpDir, config.Cfg.From, func() *http.Request {
+		if len(ef.BookConf.Url) > 0 {
+			var url, id string
+			id, err = reg.MatchString(catch.ID, ef.BookConf.Url)
+			if err != nil {
+				return nil
+			}
+
+			var req *http.Request
+			if catch.Cover.NeedDivide {
+				url = htmlx.DivideThousandURL(catch.Cover.Url, id)
+				req = htmlx.GetWithUserAgent(url)
+				for header, value := range catch.Cover.Header {
+					req.Header.Set(header, value)
+				}
+			} else {
+				url = fmt.Sprintf(catch.Cover.Url, id)
+				req = htmlx.GetWithUserAgent(url)
+			}
+			return req
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
 	ef.Intro, err = htmlx.XPathFindStr(doc, catch.Intro.Selector)
 	if err != nil {
 		return
@@ -206,62 +234,22 @@ func InitBookBaseInfo(ef *formatter.EpubFormat, doc *html.Node, catch *models.Bo
 	return
 }
 
-func SetSections(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatch) (err error) {
+func SetSections(ef *formatter.EpubFormat, catch *models.BookCatch) (err error) {
 	delay := ef.Delay
 	if catch.DelayTime >= 0 {
 		delay = catch.DelayTime
 	}
 	var volPath string
-	for i, chapter := range ef.Sections {
-		if chapter.Url == "" {
+	for i := range ef.Sections {
+		if ef.Sections[i].Url == "" {
 			continue
 		}
-		doc, err = utils.GetDomByDefault(chapter.Url)
+
+		ef.Sections[i].Content, err = SetSection(ef.Sections[i].Url, ef.Sections[i].Title, ef, catch)
 		if err != nil {
 			return
 		}
 
-		node := htmlquery.Find(doc, catch.Content.Selector)
-
-		var check string
-		check, err = htmlx.XPathFindStr(doc, catch.Title.Selector)
-		if err != nil {
-			return
-		}
-		if check == "" {
-			return fmt.Errorf("当前章节爬取错误: %s %s", chapter.Title, chapter.Url)
-		}
-
-		var f func(int, *html.Node)
-		f = func(index int, n *html.Node) {
-			if n.Type == html.TextNode {
-				raw := strings.TrimSpace(n.Data)
-				if raw == "" || len([]rune(raw)) == 1 {
-					return
-				}
-				// filter title in content
-				if utils.SimilarStr(raw, ef.Sections[i].Title) && index <= 10 {
-					return
-				}
-				if strings.Contains(raw, "本章完") {
-					return
-				}
-				raw = reg.RemoveContentFromCfg(raw)
-				if raw == "" {
-					return
-				}
-
-				ef.Sections[i].Content += ef.GenLine(raw)
-			}
-			if n.FirstChild != nil {
-				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					f(index, c)
-				}
-			}
-		}
-		for index, n := range node {
-			f(index, n)
-		}
 		volPath, err = ef.GenBookContent(i, volPath)
 		if err != nil {
 			return
@@ -270,6 +258,56 @@ func SetSections(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCat
 		if delay > 0 {
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 		}
+	}
+	return
+}
+
+func SetSection(url, checkTitle string, ef *formatter.EpubFormat, catch *models.BookCatch) (content string, err error) {
+	doc, err := htmlx.GetDomByDefault(url)
+	if err != nil {
+		return
+	}
+
+	node := htmlquery.Find(doc, catch.Content.Selector)
+
+	var check string
+	check, err = htmlx.XPathFindStr(doc, catch.Title.Selector)
+	if err != nil {
+		return
+	}
+	if check == "" {
+		err = fmt.Errorf("当前章节爬取错误: %s %s", checkTitle, url)
+		return
+	}
+	var f func(int, *html.Node)
+	f = func(index int, n *html.Node) {
+		if n.Type == html.TextNode {
+			raw := strings.TrimSpace(n.Data)
+			if raw == "" || len([]rune(raw)) == 1 {
+				return
+			}
+			// filter title in content
+			if utils.SimilarStr(raw, check) && index <= 10 {
+				return
+			}
+			if strings.Contains(raw, "本章完") {
+				return
+			}
+			raw = reg.RemoveContentFromCfg(raw)
+			if raw == "" {
+				return
+			}
+
+			content += ef.GenLine(raw)
+		}
+		if n.FirstChild != nil {
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				f(index, c)
+			}
+		}
+	}
+	for index, n := range node {
+		f(index, n)
 	}
 	return
 }

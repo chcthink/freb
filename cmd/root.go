@@ -9,10 +9,10 @@ import (
 	"freb/source"
 	"freb/source/sources"
 	"freb/utils"
+	"freb/utils/htmlx"
 	"freb/utils/reg"
 	"freb/utils/stdout"
 	"github.com/spf13/cobra"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,11 +45,11 @@ var ef formatter.EpubFormat
 
 func init() {
 	ef.Init()
-	rootCmd.PersistentFlags().StringVarP(&ef.Inner.Cover, coverCmd, "c", ef.Inner.Cover, "封面路径")
+	rootCmd.PersistentFlags().StringVarP(&ef.Images.Cover, coverCmd, "c", ef.Images.Cover, "封面路径")
 	rootCmd.PersistentFlags().StringVarP(&ef.Out, outCmd, "o", "", "输出文件名")
-	rootCmd.PersistentFlags().StringVarP(&ef.Inner.ContentLogo, subCmd, "s", ef.Inner.ContentLogo, "每章标题logo")
-	rootCmd.PersistentFlags().StringVarP(&ef.Inner.IntroImg, descImgCmd, "e", ef.Inner.IntroImg, "内容介绍logo")
-	rootCmd.PersistentFlags().StringVarP(&ef.Inner.VolImg, volCmd, "b", ef.Inner.VolImg, "卷logo")
+	rootCmd.PersistentFlags().StringVarP(&ef.Images.ContentLogo, subCmd, "s", ef.Images.ContentLogo, "每章标题logo")
+	rootCmd.PersistentFlags().StringVarP(&ef.Images.IntroImg, descImgCmd, "e", ef.Images.IntroImg, "内容介绍logo")
+	rootCmd.PersistentFlags().StringVarP(&ef.Images.VolImg, volCmd, "b", ef.Images.VolImg, "卷logo")
 	rootCmd.PersistentFlags().StringVarP(&ef.Author, authorCmd, "a", "Unknown", "作者")
 	rootCmd.PersistentFlags().StringVarP(&ef.Lang, langCmd, "l", "zh-Hans", "默认中文zh-Hans,英文 en")
 	rootCmd.PersistentFlags().StringVarP(&ef.BookConf.Url, urlCmd, "i", "", "下载书籍介绍页(包含图片与简介页面) url")
@@ -69,12 +69,12 @@ var rootCmd = &cobra.Command{
 		if len(args) > 0 {
 			path = args[0]
 		}
-		err := config.InitConfig()
+		err := InitAssets(ef)
 		if err != nil {
-			stdout.Errln(fmt.Errorf("配置错误: %v", err))
+			stdout.Errln(err)
 			return
 		}
-		bookCatch, err := CheckFlag(cmd, path)
+		bookCatch, err := checkFlag(cmd, path)
 		if err != nil {
 			stdout.Errln(err)
 			return
@@ -89,18 +89,12 @@ var rootCmd = &cobra.Command{
 			ef.Name, ef.Author = utils.GetBookInfo(ef.Name)
 		}
 
-		err = InitAssets(ef, bookCatch)
-		if err != nil {
-			stdout.Errln(err)
-			return
-		}
-
 		err = source.GetBook(&ef, bookCatch)
 		if err != nil {
 			stdout.Errln(err)
 			return
 		}
-		_ = os.RemoveAll(config.Cfg.TmpDir)
+		
 	},
 }
 
@@ -111,7 +105,7 @@ func Execute() {
 	}
 }
 
-func CheckFlag(cmd *cobra.Command, cmdPath string) (bookCatch *models.BookCatch, err error) {
+func checkFlag(cmd *cobra.Command, cmdPath string) (bookCatch *models.BookCatch, err error) {
 	if cmd.PersistentFlags().Changed(descCmd) {
 		ef.BookConf.IsDesc = false
 	}
@@ -127,88 +121,69 @@ func CheckFlag(cmd *cobra.Command, cmdPath string) (bookCatch *models.BookCatch,
 	if !cmd.PersistentFlags().Changed(delayCmd) || ef.BookConf.Delay < 0 {
 		ef.BookConf.Delay = config.Cfg.DelayTime
 	}
-	if len(ef.BookConf.Url) > 0 {
-		for domain, catch := range config.Cfg.BookCatch {
-			if strings.Contains(ef.BookConf.Url, domain) {
-				bookCatch = catch
-				bookCatch.Domain = domain
-				reg.InitTitleReg(bookCatch.Title.Filter)
-				reg.InitContentReg(bookCatch.Content.Filter)
-				return
-			}
-		}
-		return nil, fmt.Errorf(catchErr, ef.BookConf.Url)
-	}
 	if len(config.Cfg.From) != 0 {
 		if !reg.CheckUrl(config.Cfg.From) {
 			return nil, errors.New(fmt.Sprintf(sourceErr, config.Cfg.From))
 		}
 	}
+	if len(ef.BookConf.Url) > 0 {
+		return CheckCatchUrl(ef.BookConf.Url)
+	}
 	return
 }
 
-func InitAssets(ef formatter.EpubFormat, bookCatch *models.BookCatch) (err error) {
-	// image
-	ef.Inner.Cover, err = utils.SetImage(ef.Cover, config.Cfg.TmpDir, ef.Inner.Cover, config.Cfg.From, func() *http.Request {
-		var req *http.Request
-		if len(ef.BookConf.Url) > 0 {
-			var url, id string
-			id, err = reg.MatchString(bookCatch.ID, ef.BookConf.Url)
-			if err != nil {
-				return nil
-			}
-			if bookCatch.Cover.NeedDivide {
-				url = utils.DivideThousandURL(bookCatch.Cover.Url, id)
-				for header, value := range bookCatch.Cover.Header {
-					req.Header.Set(header, value)
-				}
-			} else {
-				url = fmt.Sprintf(bookCatch.Cover.Url, id)
-			}
-			req = utils.GetWithUserAgent(url)
-			return req
+func CheckCatchUrl(url string) (bookCatch *models.BookCatch, err error) {
+	if !reg.CheckUrl(url) {
+		return nil, errors.New(fmt.Sprintf(sourceErr, url))
+	}
+	for domain, catch := range config.Cfg.BookCatch {
+		if strings.Contains(url, domain) {
+			bookCatch = catch
+			bookCatch.Domain = domain
+			reg.InitCustomFilterReg(bookCatch)
+			return
 		}
-		return nil
-	})
+	}
+	return nil, fmt.Errorf(catchErr, url)
+}
+
+func InitAssets(ef formatter.EpubFormat) (err error) {
+	ef.Images.IntroImg, err = htmlx.DownloadWithReq(ef.Images.IntroImg, config.Cfg.TmpDir, config.Cfg.From, nil)
 	if err != nil {
 		return
 	}
-	ef.Inner.IntroImg, err = utils.SetImage(ef.Inner.IntroImg, config.Cfg.TmpDir, ef.Inner.IntroImg, config.Cfg.From, nil)
+	ef.Images.ContentLogo, err = htmlx.DownloadWithReq(ef.Images.ContentLogo, config.Cfg.TmpDir, config.Cfg.From, nil)
 	if err != nil {
 		return
 	}
-	ef.Inner.ContentLogo, err = utils.SetImage(ef.Inner.ContentLogo, config.Cfg.TmpDir, ef.Inner.ContentLogo, config.Cfg.From, nil)
-	if err != nil {
-		return
-	}
-	ef.Inner.VolImg, err = utils.SetImage(ef.Inner.VolImg, config.Cfg.TmpDir, ef.Inner.VolImg, config.Cfg.From, nil)
+	ef.Images.VolImg, err = htmlx.DownloadWithReq(ef.Images.VolImg, config.Cfg.TmpDir, config.Cfg.From, nil)
 	if err != nil {
 		return
 	}
 	// font
-	ef.AssetsPath.Font, err = utils.LocalOrDownload("assets/fonts/font.ttf", config.Cfg.From, config.Cfg.TmpDir)
+	ef.Assets.Font, err = htmlx.LocalOrDownload("assets/fonts/font.ttf", config.Cfg.From, config.Cfg.TmpDir)
 	if err != nil {
 		return
 	}
 	// MetaINF
-	ef.AssetsPath.MetaInf, err = utils.LocalOrDownload("assets/META-INF/com.apple.ibooks.display-options.xml", config.Cfg.From, config.Cfg.TmpDir)
+	ef.Assets.MetaInf, err = htmlx.LocalOrDownload("assets/META-INF/com.apple.ibooks.display-options.xml", config.Cfg.From, config.Cfg.TmpDir)
 	if err != nil {
 		return
 	}
 	// css
-	ef.AssetsPath.MainCss, err = utils.LocalOrDownload("assets/styles/main.css", config.Cfg.From, config.Cfg.TmpDir)
+	ef.Assets.MainCss, err = htmlx.LocalOrDownload("assets/styles/main.css", config.Cfg.From, config.Cfg.TmpDir)
 	if err != nil {
 		return
 	}
-	ef.AssetsPath.FontCss, err = utils.LocalOrDownload("assets/styles/fonts.css", config.Cfg.From, config.Cfg.TmpDir)
+	ef.Assets.FontCss, err = htmlx.LocalOrDownload("assets/styles/fonts.css", config.Cfg.From, config.Cfg.TmpDir)
 	if err != nil {
 		return
 	}
-	ef.AssetsPath.CoverCss, err = utils.LocalOrDownload("assets/styles/cover.css", config.Cfg.From, config.Cfg.TmpDir)
+	ef.Assets.CoverCss, err = htmlx.LocalOrDownload("assets/styles/cover.css", config.Cfg.From, config.Cfg.TmpDir)
 	if err != nil {
 		return
 	}
-	ef.AssetsPath.InstructionCss, err = utils.LocalOrDownload("assets/styles/instruction.css", config.Cfg.From, config.Cfg.TmpDir)
+	ef.Assets.InstructionCss, err = htmlx.LocalOrDownload("assets/styles/instruction.css", config.Cfg.From, config.Cfg.TmpDir)
 	if err != nil {
 		return
 	}

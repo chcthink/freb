@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 	"freb/models"
-	"freb/utils"
+	"freb/utils/htmlx"
 	"freb/utils/stdout"
 	"github.com/pelletier/go-toml"
 	"net/http"
@@ -23,11 +23,11 @@ func InitConfig() (err error) {
 	var source string
 	if Cfg.From != "" {
 		stdout.Fmtfln("正在从远程仓库下载文件: %s", Cfg.From)
-		source, err = utils.DownloadTmp(Cfg.TmpDir, cfgPath, func() *http.Request {
-			return utils.GetWithUserAgent(Cfg.From)
+		source, err = htmlx.DownloadTmp(Cfg.TmpDir, cfgPath, func() *http.Request {
+			return htmlx.GetWithUserAgent(Cfg.From)
 		})
 	} else {
-		source, err = utils.LocalOrDownload(cfgPath, Cfg.TmpDir, Cfg.From)
+		source, err = htmlx.LocalOrDownload(cfgPath, Cfg.TmpDir, Cfg.From)
 	}
 	if err != nil {
 		return fmt.Errorf(cfgErr, err)

@@ -9,16 +9,17 @@ from = 'https://raw.githubusercontent.com/chcthink/freb/refs/heads/main/'
 [regs]
 # txt 转化正则
 intro = '(文章|内容)简介([:：])?'
-author = '作者([:：])?'
+author = '作者[:：]?'
 end = '大结局|最终话'
-vol = '^第?[0-9一二三四五六七八九十零〇百千两 ]+[卷部]'
+vol = '(^第?[0-9一二三四五六七八九十零〇百千两]+[卷部])|(^[卷部][0-9一二三四五六七八九十零〇百千两]+)'
 [regs.chapter_title]
 prologue = ['^引子$','^楔子$','^序[章\.:：]?']
-num = ['^章节(目录)?','^第[0-9一二三四五六七八九十零〇百千两 ]+[章回节集卷部]','^\d+[\.:：]?','^[Ss]ection.{1,20}$','^[Cc]hapter.{1,20}$','^[Pp]age.{1,20}$']
+num = ['^章节(目录)?','^第[0-9一二三四五六七八九十零〇百千两 ]+[章回节集]','^\d+[\.:：]?','^[Ss]ection.{1,20}$','^[Cc]hapter.{1,20}$','^[Pp]age.{1,20}$']
 sub_num = '[(（][0-9一二三四五六七八九十零〇百千两上中下 ][)）]'
 # ----- 爬取站点配置 catalog ------ #
 [book_catch]
 [book_catch.'https://69shuba.cx']
+search_match = 'https://69shuba.cx/book'
 cover.url = 'https://69shuba.cx/fengmian/%s/%s/%ss.jpg'
 cover.header."Referer" = 'https://69shuba.cx/modules/article/search.php'
 cover.need_divide = true
@@ -37,6 +38,7 @@ content.selector = '//div[@class="txtnav"]/node()[normalize-space()][not(child::
 content.filter = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
 
 [book_catch.'https://www.69yuedu.net']
+search_match = 'https://www.69yuedu.net/article'
 cover.url = 'https://www.69yuedu.net/files/article/image/%s/cover.jpg'
 cover.header."Referer" = 'https://www.69yuedu.net/modules/article/search.php'
 id = '[a-z]+(?=.html$)'

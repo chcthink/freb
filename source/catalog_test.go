@@ -25,6 +25,9 @@ func TestGetCatalog(t *testing.T) {
 			t.Error(err)
 			return
 		}
+		if len(ef.Sections) == 0 {
+			t.Fail()
+		}
 		fmt.Println(len(ef.Sections))
 		spew.Dump(ef.Sections[:2])
 	})
@@ -33,10 +36,13 @@ func TestGetCatalog(t *testing.T) {
 		ef.BookConf = &models.BookConf{
 			Catalog: "https://book.qidian.com/info/1017281778",
 		}
-		err := GetCatalogFromUrl(&ef)
+		err = GetCatalogFromUrl(&ef)
 		if err != nil {
 			t.Error(err)
 			return
+		}
+		if len(ef.Sections) == 0 {
+			t.Fail()
 		}
 		fmt.Println(len(ef.Sections))
 		spew.Dump(ef.Sections[:20])
@@ -46,10 +52,13 @@ func TestGetCatalog(t *testing.T) {
 		ef.BookConf = &models.BookConf{
 			Catalog: "https://fanqienovel.com/page/7143038691944959011",
 		}
-		err := GetCatalogFromUrl(&ef)
+		err = GetCatalogFromUrl(&ef)
 		if err != nil {
 			t.Error(err)
 			return
+		}
+		if len(ef.Sections) == 0 {
+			t.Fail()
 		}
 		fmt.Println(len(ef.Sections))
 		spew.Dump(ef.Sections[:20])

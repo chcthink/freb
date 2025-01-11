@@ -33,6 +33,7 @@ const (
 	delayCmd      = "delay"
 	catalogUrlCmd = "curl"
 	configCmd     = "config"
+	searchCmd     = "search"
 )
 
 const (
@@ -40,6 +41,8 @@ const (
 	sourceErr = "文件路径或地址错误: %s"
 	catchErr  = " config.toml 不存在对应配置: %s"
 )
+
+var searchValue string
 
 var ef formatter.EpubFormat
 
@@ -59,6 +62,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&ef.BookConf.Delay, delayCmd, "t", 0, "每章延迟毫秒数")
 	rootCmd.PersistentFlags().StringVarP(&ef.BookConf.Catalog, catalogUrlCmd, "u", "", "章节爬取url 支持起点,番茄,七猫")
 	rootCmd.PersistentFlags().StringVarP(&config.Cfg.From, configCmd, "f", "", "自定义 config.toml 路径(url或本地文件)")
+	rootCmd.PersistentFlags().StringVarP(&searchValue, searchCmd, "g", "", "在已配置域名下搜索书名")
 }
 
 var rootCmd = &cobra.Command{
@@ -74,6 +78,12 @@ var rootCmd = &cobra.Command{
 			stdout.Errln(err)
 			return
 		}
+		if searchValue != "" {
+			ef.BookConf.Url, err = source.Search(searchValue, config.Cfg.BookCatch)
+			if err != nil {
+				return
+			}
+		}
 		bookCatch, err := checkFlag(cmd, path)
 		if err != nil {
 			stdout.Errln(err)
@@ -86,7 +96,7 @@ var rootCmd = &cobra.Command{
 		if len(path) > 0 {
 			source = &sources.TxtSource{}
 			ef.Name = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-			ef.Name, ef.Author = utils.GetBookInfo(ef.Name)
+			ef.Name, ef.Author = reg.GetBookInfo(ef.Name)
 		}
 
 		err = source.GetBook(&ef, bookCatch)
@@ -94,7 +104,7 @@ var rootCmd = &cobra.Command{
 			stdout.Errln(err)
 			return
 		}
-		
+
 	},
 }
 

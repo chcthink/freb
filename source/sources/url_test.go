@@ -125,5 +125,8 @@ func TestContent(t *testing.T) {
 	for index, n := range node {
 		f(index, n)
 	}
-	fmt.Println(content)
+	dest := `<p>冲云破雾</p><p>为小失大</p><p>远年近岁</p><p>汉票签处</p><p>丁宁周至</p>`
+	if dest != content {
+		t.Fail()
+	}
 }

@@ -13,6 +13,13 @@
 > `v0.3.6` 版本支持从其他网站获取目录以保证目录的观赏性,现仅支持:
 > \- 起点 - 番茄 - 七猫
 
+> ##### 搜索
+> `v0.5.1` 版本支持从 config.toml配置过的的 book_catch对应域名内查找图书
+
+```shell
+./freb -g 阵问长生
+```
+
 #### 删除特定内容
 
 > 用于删除标题,书籍简介,文章内容中的广告等内容
@@ -42,10 +49,6 @@
 #### How to use
 
 ```shell
-Usage:
-  freb [flags]
-  freb [command]
-
 Available Commands:
   check       测试 URL 获取书籍时,正则与 xpath 是否匹配
   completion  Generate the autocompletion script for the specified shell
@@ -65,9 +68,11 @@ Flags:
   -l, --lang string     默认中文zh-Hans,英文 en (default "zh-Hans")
   -o, --out string      输出文件名
   -p, --path string     转化txt路径
+  -g, --search string   在已配置域名下搜索书名
   -s, --sub string      每章标题logo (default "content_logo.jpg")
   -i, --url string      下载书籍介绍页(包含图片与简介页面) url
   -b, --vol string      卷logo (default "vol.jpg")
+
 ```
 
 ##### (一) 爬取小说并转化为 EPub

@@ -60,6 +60,9 @@ func GetDomByDefault(url string) (doc *html.Node, err error) {
 func TransDom2Doc(req *http.Request) (doc *html.Node, err error) {
 	var body []byte
 	body, err = TransDom2Bytes(req)
+	if err != nil {
+		return
+	}
 	unescapedBody := html.UnescapeString(string(body))
 	doc, err = htmlquery.Parse(strings.NewReader(unescapedBody))
 	if err != nil {

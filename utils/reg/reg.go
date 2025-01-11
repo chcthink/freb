@@ -9,22 +9,22 @@ import (
 )
 
 var (
-	chapterNumRegs      []*regexp.Regexp
-	chapterPrologueRegs *regexp.Regexp
-	chapterNumReg       *regexp.Regexp
-	introReg            *regexp.Regexp
-	chapterSubNumReg    *regexp.Regexp
-	volReg              *regexp.Regexp
-	authorReg           *regexp.Regexp
-	endReg              *regexp.Regexp
+	chapterNumRegs      []*Reg
+	chapterPrologueRegs = &Reg{}
+	chapterNumReg       = &Reg{}
+	introReg            = &Reg{}
+	chapterSubNumReg    = &Reg{}
+	volReg              = &Reg{}
+	authorReg           = &Reg{}
+	endReg              = &Reg{}
 	urlReg              *regexp.Regexp
 	numReg              *regexp.Regexp
 	c0ControlReg        *regexp.Regexp
 )
 
 var (
-	rmTitleReg   []*regexp.Regexp
-	rmContentReg []*regexp.Regexp
+	rmTitleReg   []*Reg
+	rmContentReg []*Reg
 )
 
 // init reg
@@ -36,25 +36,30 @@ func init() {
 
 func InitCustomMatchReg(regs *models.Regs) {
 	for _, pattern := range append(regs.ChapterTitle.Prologue, regs.ChapterTitle.Num...) {
-		re := regexp.MustCompile(pattern)
-		chapterNumRegs = append(chapterNumRegs, re)
+		reg := new(Reg)
+		reg.MustCompile(pattern)
+		chapterNumRegs = append(chapterNumRegs, reg)
 	}
-	chapterPrologueRegs = regexp.MustCompile(strings.Join(regs.ChapterTitle.Prologue, "|"))
-	introReg = regexp.MustCompile(regs.Intro)
-	chapterNumReg = regexp.MustCompile(strings.Join(regs.ChapterTitle.Num, "|"))
-	chapterSubNumReg = regexp.MustCompile(regs.ChapterTitle.SubNum)
-	volReg = regexp.MustCompile(regs.Vol)
-	authorReg = regexp.MustCompile(regs.Author)
-	endReg = regexp.MustCompile(regs.End)
+	chapterPrologueRegs.MustCompile(strings.Join(regs.ChapterTitle.Prologue, "|"))
+	introReg.MustCompile(regs.Intro)
+	chapterNumReg.MustCompile(strings.Join(regs.ChapterTitle.Num, "|"))
+	chapterSubNumReg.MustCompile(regs.ChapterTitle.SubNum)
+	volReg.MustCompile(regs.Vol)
+	authorReg.MustCompile(regs.Author)
+	endReg.MustCompile(regs.End)
 
 }
 
 func InitCustomFilterReg(catch *models.BookCatch) {
 	for _, reg := range catch.Title.Filter {
-		rmTitleReg = append(rmTitleReg, regexp.MustCompile(reg))
+		r := new(Reg)
+		r.MustCompile(reg)
+		rmTitleReg = append(rmTitleReg, r)
 	}
 	for _, reg := range catch.Content.Filter {
-		rmContentReg = append(rmContentReg, regexp.MustCompile(reg))
+		r := new(Reg)
+		r.MustCompile(reg)
+		rmContentReg = append(rmContentReg, r)
 	}
 }
 
@@ -116,7 +121,7 @@ func findNumInTitle(str string) (match string) {
 		if chapterPrologueRegs.MatchString(tmp) {
 			return s
 		}
-		nums := chapterNumReg.FindAllString(tmp, -1)
+		nums := chapterNumReg.FindAllString(tmp)
 		for i := range nums {
 			t := strings.Split(str, nums[i])
 			if strings.TrimSpace(t[len(t)-1]) != "" {
@@ -163,7 +168,8 @@ func GetAuthor(str string) (isAuthor bool, author string) {
 
 func AuthorIndex(str string) int {
 	if authorReg.MatchString(str) {
-		return authorReg.FindStringIndex(str)[1]
+		index, length := authorReg.FindStringIndex(str)
+		return index + length
 	}
 	return -1
 }
@@ -239,6 +245,31 @@ func Filters(exps []string, str string) (dest string, err error) {
 		if isExist, _ := reg.MatchString(dest); isExist {
 			dest, _ = reg.Replace(dest, "", -1, -1)
 		}
+	}
+	return
+}
+
+const (
+	bookNameMarkPre = '《'
+	bookNameMarkSuf = '》'
+	hyphen          = '-'
+)
+
+func GetBookInfo(str string) (name, author string) {
+	if strings.ContainsRune(str, bookNameMarkPre) && strings.ContainsRune(str, bookNameMarkSuf) {
+		start := strings.IndexRune(str, bookNameMarkPre)
+		end := strings.IndexRune(str, bookNameMarkSuf)
+		if start >= end {
+			return
+		}
+		name = strings.Replace(str[start:end], string(bookNameMarkPre), "", 1)
+	}
+	if index := AuthorIndex(str); index > 0 {
+		author = str[index:]
+	}
+	if strings.ContainsRune(str, hyphen) {
+		name = str[:strings.IndexRune(str, hyphen)]
+		author = str[strings.IndexRune(str, hyphen):]
 	}
 	return
 }

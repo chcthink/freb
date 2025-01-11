@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"freb/models"
-	"freb/utils/reg"
 	"github.com/adrg/strutil"
 	"github.com/adrg/strutil/metrics"
 	"os"
@@ -37,8 +36,12 @@ func IsFileInWorkDir(path string) bool {
 	return true
 }
 
+func IsDev() bool {
+	return strings.Contains(models.Version, "dev")
+}
+
 func IsFileInExecDir(path string) (filePath string, isExist bool) {
-	if strings.Contains(models.Version, "dev") {
+	if IsDev() {
 		filePath, _ = findProjectRoot()
 		filePath = filepath.Join(filePath, path)
 	} else {
@@ -52,31 +55,6 @@ func IsFileInExecDir(path string) (filePath string, isExist bool) {
 		return
 	}
 	return filePath, true
-}
-
-const (
-	bookNameMarkPre = '《'
-	bookNameMarkSuf = '》'
-	hyphen          = '-'
-)
-
-func GetBookInfo(str string) (name, author string) {
-	if strings.ContainsRune(str, bookNameMarkPre) && strings.ContainsRune(str, bookNameMarkSuf) {
-		start := strings.IndexRune(str, bookNameMarkPre)
-		end := strings.IndexRune(str, bookNameMarkSuf)
-		if start >= end {
-			return
-		}
-		name = strings.Replace(str[start:end], string(bookNameMarkPre), "", 1)
-	}
-	if index := reg.AuthorIndex(str); index > 0 {
-		author = str[index:]
-	}
-	if strings.ContainsRune(str, hyphen) {
-		name = str[:strings.IndexRune(str, hyphen)]
-		author = str[strings.IndexRune(str, hyphen):]
-	}
-	return
 }
 
 func SimilarStr(str1, str2 string) bool {

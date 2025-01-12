@@ -19,16 +19,6 @@ jobs:
         with:
           go-version: '1.23.1'
 
-#      - name: Cache Go modules
-#        uses: actions/cache@v3
-#        with:
-#          path: |
-#            ~/.cache/go-build
-#            ~/go/pkg/mod
-#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-#          restore-keys: |
-#            ${{ runner.os }}-go-
-
       - name: Install dependencies
         run: go mod tidy
 
@@ -40,16 +30,20 @@ jobs:
           for file in tmp/*; do
             if [ -f "$file" ]; then
               echo "$file"
-              zip -r "${file%.*}".zip assets/ config.toml 
-              zip -r "${file%.*}".zip $file -j
+              if [[ $file == *"windows"* ]]; then
+                zip -r "${file%.*}".zip assets/ *.toml
+                zip -r "${file%.*}".zip $file -j
+              else
+                tar -czf "${file%.*}".tar.gz assets/ *.toml -C tmp "$(basename "$file")"
+              fi
             fi
           done
+          mv *.toml tmp/
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@v1
         with:
           generateReleaseNotes: true
-#          draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

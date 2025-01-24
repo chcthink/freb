@@ -54,6 +54,24 @@ chapter.url = '//a/@href'
 title.selector = '//div[@class="txtbox"]/h1'
 content.selector = '//div[@class="content"]/node()[normalize-space()][not(child::script)][not(child::span)][not(normalize-space() = normalize-space(//h1/text()))][not(normalize-space() = "(本章完)")]'
 content.filter = ['.*[6六陆陸].?[9九玖].?[书書阅閱].?[吧讀].*']
+
+[book_catch.'http://www.biqu520.net']
+#search_match = ''
+cover.url = '//div[@id="fmimg"]/img/@src'
+#id = ''
+delay_time = 1000
+name.selector = '//div[@id="info"]/h1'
+author.selector = '//div[@id="info"]/p[1]/text()'
+author.filter = ['.+：']
+intro.selector = '//div[@id="intro"]/p'
+toc = ''
+sort = '//div[@class="sorting"]/a[@style]'
+chapter.element = '//div[@id="list"]//dt[2]/following-sibling::dd'
+chapter.title = '//a/text()'
+chapter.url = '//a/@href'
+title.selector = '//div[@class="bookname"]/h1'
+content.selector = '//div[@id="content"]/p'
+content.filter = []
 # ----- 参照信息配置 catalog ------ #
 [info_selector]
 

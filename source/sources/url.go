@@ -12,6 +12,7 @@ import (
 	"freb/utils/reg"
 	"freb/utils/stdout"
 	"github.com/antchfx/htmlquery"
+	"github.com/antchfx/xpath"
 	"golang.org/x/net/html"
 	"net/http"
 	"strings"
@@ -93,23 +94,29 @@ func getCatalog(ef *formatter.EpubFormat, doc *html.Node, catch *models.BookCatc
 		isCatalog = true
 	}
 
-	tocUrl, err := htmlx.XPathFindStr(doc, catch.Toc)
-	if err != nil {
-		return
-	}
-	if !reg.CheckUrl(tocUrl) {
-		tocUrl = strings.Join([]string{catch.Domain, tocUrl}, "")
+	if catch.Toc != "" {
+		var tocUrl string
+		tocUrl, err = htmlx.XPathFindStr(doc, catch.Toc)
+		if err != nil {
+			return
+		}
+		if !reg.CheckUrl(tocUrl) {
+			tocUrl = strings.Join([]string{catch.Domain, tocUrl}, "")
+		}
+		doc, err = htmlx.GetDomByDefault(tocUrl)
+		if err != nil {
+			return err
+		}
 	}
 
-	doc, err = htmlx.GetDomByDefault(tocUrl)
-	if err != nil {
-		return err
-	}
 	var isReverse bool
 	var sorting string
-	if sorting, err = htmlx.XPathFindStr(doc, catch.Sort); strings.Contains(sorting, "倒序") {
-		isReverse = true
+	if catch.Sort != "" {
+		if sorting, err = htmlx.XPathFindStr(doc, catch.Sort); strings.Contains(sorting, "倒序") {
+			isReverse = true
+		}
 	}
+
 	chapters := htmlquery.Find(doc, catch.Chapter.Element)
 	total := len(chapters)
 	if total == 0 {
@@ -197,32 +204,43 @@ func InitBookBaseInfo(ef *formatter.EpubFormat, doc *html.Node, catch *models.Bo
 			return
 		}
 	}
-	ef.Images.Cover, err = htmlx.DownloadWithReq(ef.Images.Cover, config.Cfg.TmpDir, config.Cfg.From, func() *http.Request {
+
+	coverUrl := catch.Cover.Url
+	var req *http.Request
+	if expr, _ := xpath.Compile(coverUrl); expr != nil {
+		coverUrl, err = htmlx.XPathFindStr(doc, catch.Author.Selector)
+		if err != nil {
+			return
+		}
+		if !reg.CheckUrl(coverUrl) {
+			coverUrl = strings.Join([]string{catch.Domain, coverUrl}, "")
+		}
+	} else {
 		if len(ef.BookConf.Url) > 0 {
-			var url, id string
+			var id string
 			id, err = reg.MatchString(catch.ID, ef.BookConf.Url)
 			if err != nil {
 				return nil
 			}
-
-			var req *http.Request
 			if catch.Cover.NeedDivide {
-				url = htmlx.DivideThousandURL(catch.Cover.Url, id)
-				req = htmlx.GetWithUserAgent(url)
+				coverUrl = htmlx.DivideThousandURL(catch.Cover.Url, id)
+				req = htmlx.GetWithUserAgent(coverUrl)
 				for header, value := range catch.Cover.Header {
 					req.Header.Set(header, value)
 				}
 			} else {
-				url = fmt.Sprintf(catch.Cover.Url, id)
-				req = htmlx.GetWithUserAgent(url)
+				coverUrl = fmt.Sprintf(catch.Cover.Url, id)
+				req = htmlx.GetWithUserAgent(coverUrl)
 			}
-			return req
 		}
-		return nil
+	}
+	ef.Images.Cover, err = htmlx.DownloadWithReq(ef.Images.Cover, config.Cfg.TmpDir, config.Cfg.From, func() *http.Request {
+		return req
 	})
 	if err != nil {
 		return
 	}
+
 	ef.Intro, err = htmlx.XPathFindStr(doc, catch.Intro.Selector)
 	if err != nil {
 		return
